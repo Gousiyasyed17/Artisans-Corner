@@ -1,0 +1,247 @@
+import React, { useState } from "react";
+import {
+  Search,
+  Eye,
+  Trash2,
+  UserCheck,
+  UserX,
+} from "lucide-react";
+
+export default function ManageUsers() {
+  const [users] = useState([
+    {
+      id: "USR001",
+      name: "Rahul Sharma",
+      email: "rahul@gmail.com",
+      role: "Customer",
+      status: "Active",
+    },
+    {
+      id: "USR002",
+      name: "Priya Singh",
+      email: "priya@gmail.com",
+      role: "Seller",
+      status: "Active",
+    },
+    {
+      id: "USR003",
+      name: "Arjun Patel",
+      email: "arjun@gmail.com",
+      role: "Customer",
+      status: "Blocked",
+    },
+    {
+      id: "USR004",
+      name: "Sneha Reddy",
+      email: "sneha@gmail.com",
+      role: "Seller",
+      status: "Active",
+    },
+    {
+      id: "USR005",
+      name: "Mohammed Ali",
+      email: "ali@gmail.com",
+      role: "Customer",
+      status: "Active",
+    },
+  ]);
+
+  return (
+    <div className="min-h-screen bg-[#FFF8F2] p-8">
+
+      <div className="max-w-7xl mx-auto">
+
+        <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
+
+          <div>
+
+            <h1 className="text-4xl font-bold text-[#4B2E20]">
+              Manage Users
+            </h1>
+
+            <p className="text-gray-500 mt-2">
+              View, search and manage all marketplace users.
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* Top Controls */}
+
+        <div className="grid md:grid-cols-2 gap-5 mt-8">
+
+          <div className="bg-white rounded-2xl shadow p-4 flex items-center">
+
+            <Search className="text-gray-400" />
+
+            <input
+              type="text"
+              placeholder="Search users..."
+              className="ml-4 w-full outline-none"
+            />
+
+          </div>
+
+          <select className="bg-white rounded-2xl shadow p-4 outline-none">
+
+            <option>All Roles</option>
+            <option>Customer</option>
+            <option>Seller</option>
+            <option>Admin</option>
+
+          </select>
+
+        </div>
+
+        {/* Summary */}
+
+        <div className="grid md:grid-cols-4 gap-6 mt-8">
+
+          <div className="bg-white rounded-3xl shadow p-6">
+            <h3 className="text-gray-500">Total Users</h3>
+            <p className="text-3xl font-bold text-[#4B2E20] mt-2">12,540</p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow p-6">
+            <h3 className="text-gray-500">Customers</h3>
+            <p className="text-3xl font-bold text-blue-600 mt-2">10,050</p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow p-6">
+            <h3 className="text-gray-500">Sellers</h3>
+            <p className="text-3xl font-bold text-orange-600 mt-2">2,350</p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow p-6">
+            <h3 className="text-gray-500">Blocked</h3>
+            <p className="text-3xl font-bold text-red-600 mt-2">140</p>
+          </div>
+
+        </div>
+
+        {/* Users Table */}
+
+        <div className="overflow-x-auto bg-white rounded-3xl shadow mt-8">
+
+          <table className="w-full">
+
+            <thead className="bg-[#F5ECE2]">
+
+              <tr>
+
+                <th className="text-left p-5">User ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              {users.map((user) => (
+
+                <tr
+                  key={user.id}
+                  className="border-t hover:bg-gray-50"
+                >
+
+                  <td className="p-5 font-semibold">
+                    {user.id}
+                  </td>
+
+                  <td className="text-center">
+                    {user.name}
+                  </td>
+
+                  <td className="text-center">
+                    {user.email}
+                  </td>
+
+                  <td className="text-center">
+
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        user.role === "Seller"
+                          ? "bg-orange-100 text-orange-700"
+                          : user.role === "Admin"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {user.role}
+                    </span>
+
+                  </td>
+
+                  <td className="text-center">
+
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        user.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {user.status}
+                    </span>
+
+                  </td>
+
+                  <td>
+
+                    <div className="flex justify-center gap-3">
+
+                      <button className="bg-blue-100 p-2 rounded-lg hover:bg-blue-200">
+                        <Eye
+                          size={18}
+                          className="text-blue-600"
+                        />
+                      </button>
+
+                      {user.status === "Active" ? (
+                        <button className="bg-yellow-100 p-2 rounded-lg hover:bg-yellow-200">
+                          <UserX
+                            size={18}
+                            className="text-yellow-700"
+                          />
+                        </button>
+                      ) : (
+                        <button className="bg-green-100 p-2 rounded-lg hover:bg-green-200">
+                          <UserCheck
+                            size={18}
+                            className="text-green-700"
+                          />
+                        </button>
+                      )}
+
+                      <button className="bg-red-100 p-2 rounded-lg hover:bg-red-200">
+                        <Trash2
+                          size={18}
+                          className="text-red-600"
+                        />
+                      </button>
+
+                    </div>
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
