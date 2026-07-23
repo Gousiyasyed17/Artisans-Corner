@@ -13,17 +13,72 @@ const orderSchema = new mongoose.Schema(
         product: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
+          required: true,
         },
 
-        quantity: Number,
+        seller: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
 
-        price: Number,
+        quantity: {
+          type: Number,
+          required: true,
+          default: 1,
+        },
+
+        price: {
+          type: Number,
+          required: true,
+        },
       },
     ],
+
+    shippingAddress: {
+      fullName: {
+        type: String,
+        default: "",
+      },
+      phone: {
+        type: String,
+        default: "",
+      },
+      address: {
+        type: String,
+        default: "",
+      },
+      city: {
+        type: String,
+        default: "",
+      },
+      state: {
+        type: String,
+        default: "",
+      },
+      pincode: {
+        type: String,
+        default: "",
+      },
+      country: {
+        type: String,
+        default: "India",
+      },
+    },
 
     totalPrice: {
       type: Number,
       required: true,
+    },
+
+    shippingCharge: {
+      type: Number,
+      default: 0,
+    },
+
+    discount: {
+      type: Number,
+      default: 0,
     },
 
     paymentMethod: {
@@ -34,7 +89,7 @@ const orderSchema = new mongoose.Schema(
 
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid"],
+      enum: ["Pending", "Paid", "Failed", "Refunded"],
       default: "Pending",
     },
 
@@ -42,12 +97,23 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: [
         "Pending",
+        "Confirmed",
         "Processing",
         "Shipped",
+        "Out for Delivery",
         "Delivered",
         "Cancelled",
+        "Returned",
       ],
       default: "Pending",
+    },
+
+    deliveredAt: {
+      type: Date,
+    },
+
+    cancelledAt: {
+      type: Date,
     },
   },
   {

@@ -5,6 +5,7 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      trim: true,
     },
 
     description: {
@@ -36,11 +37,43 @@ const productSchema = new mongoose.Schema(
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
+      required: true,
     },
 
     seller: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
+    },
+
+    material: {
+      type: String,
+      default: "",
+    },
+
+    dimensions: {
+      type: String,
+      default: "",
+    },
+
+    weight: {
+      type: String,
+      default: "",
+    },
+
+    color: {
+      type: String,
+      default: "",
+    },
+
+    handmade: {
+      type: Boolean,
+      default: true,
+    },
+
+    estimatedDelivery: {
+      type: String,
+      default: "5-7 Days",
     },
 
     rating: {
@@ -56,6 +89,11 @@ const productSchema = new mongoose.Schema(
     featured: {
       type: Boolean,
       default: false,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   {

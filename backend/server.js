@@ -2,8 +2,16 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
-
 const authRoutes = require("./routes/authRoutes");
+const productRoutes = require("./routes/productRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const sellerRoutes = require("./routes/sellerRoutes");
+const customerRoutes = require("./routes/customerRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 // Load Environment Variables
 dotenv.config();
@@ -20,8 +28,17 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/seller", sellerRoutes);
+app.use("/api/customer", customerRoutes);
+app.use("/api/admin", adminRoutes);
 
-// Home Route
+// Homepage Route
 app.get("/", (req, res) => {
   res.send("🚀 Artisan Corner Backend is Running...");
 });
