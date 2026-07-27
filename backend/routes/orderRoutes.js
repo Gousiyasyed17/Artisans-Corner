@@ -5,6 +5,7 @@ const {
   placeOrder,
   getMyOrders,
   getOrderById,
+  cancelOrder,
   updateOrderStatus,
   getAllOrders,
 } = require("../controllers/orderController");
@@ -22,6 +23,9 @@ router.get("/", protect, getAllOrders);
 
 // Single Order
 router.get("/:id", protect, getOrderById);
+
+// Cancel Order
+router.put("/:id/cancel", protect, cancelOrder);
 
 // Update Order Status
 router.put("/:id", protect, updateOrderStatus);

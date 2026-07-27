@@ -15,13 +15,18 @@ export default function Home() {
   }, []);
 
   const loadProducts = async () => {
-    try {
-      const data = await getProducts();
-      setProducts(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  try {
+    const data = await getProducts();
+
+    console.log("Products received:", data);
+    console.log("Type:", typeof data);
+    console.log("Length:", data?.length);
+
+    setProducts(data);
+  } catch (error) {
+    console.error("Load Error:", error);
+  }
+};
 
   return (
     <div className="bg-[#fffaf3] min-h-screen">

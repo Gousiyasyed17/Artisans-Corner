@@ -9,13 +9,22 @@ import {
   Upload,
   ShoppingBag,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 export default function Register() {
-  const [role, setRole] = useState("Customer");
+  const navigate = useNavigate();
+
+  const [role, setRole] = useState("customer");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const passwordStrength = () => {
     if (password.length === 0) return "";
@@ -29,6 +38,39 @@ export default function Register() {
     if (passwordStrength() === "Medium") return "text-yellow-500";
     if (passwordStrength() === "Strong") return "text-green-600";
     return "";
+  };
+
+  const handleRegister = async () => {
+    if (!name || !email || !phone || !password || !confirmPassword) {
+      return alert("Please fill all fields.");
+    }
+
+    if (password !== confirmPassword) {
+      return alert("Passwords do not match.");
+    }
+
+    try {
+      setLoading(true);
+
+      const { data } = await API.post("/auth/register", {
+        name,
+        email,
+        phone,
+        password,
+        role,
+      });
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      alert("Registration Successful!");
+
+      navigate("/");
+    } catch (error) {
+      alert(error.response?.data?.message || "Registration Failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,12 +91,10 @@ export default function Register() {
         </p>
 
         <div className="mt-16 space-y-5">
-
           <p>✔ Buy unique handmade products</p>
           <p>✔ Sell your handcrafted creations</p>
           <p>✔ Secure payments</p>
           <p>✔ Fast nationwide delivery</p>
-
         </div>
 
       </div>
@@ -86,8 +126,8 @@ export default function Register() {
               onChange={(e) => setRole(e.target.value)}
               className="w-full mt-2 border rounded-xl p-3"
             >
-              <option>Customer</option>
-              <option>Seller</option>
+              <option value="customer">Customer</option>
+              <option value="seller">Seller</option>
             </select>
 
           </div>
@@ -108,6 +148,8 @@ export default function Register() {
                 type="text"
                 placeholder="Enter full name"
                 className="w-full p-3 outline-none"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
 
             </div>
@@ -130,6 +172,8 @@ export default function Register() {
                 type="email"
                 placeholder="Enter email"
                 className="w-full p-3 outline-none"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
 
             </div>
@@ -152,6 +196,8 @@ export default function Register() {
                 type="tel"
                 placeholder="Enter phone number"
                 className="w-full p-3 outline-none"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
               />
 
             </div>
@@ -232,6 +278,8 @@ export default function Register() {
                 type={showConfirm ? "text" : "password"}
                 placeholder="Confirm password"
                 className="w-full p-3 outline-none"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
               />
 
               <button
@@ -265,10 +313,12 @@ export default function Register() {
 
           {/* Register */}
 
-          <button className="w-full mt-8 bg-[#4B2E20] hover:bg-[#6B4226] text-white py-3 rounded-xl font-semibold">
-
-            Create Account
-
+          <button
+            onClick={handleRegister}
+            disabled={loading}
+            className="w-full mt-8 bg-[#4B2E20] hover:bg-[#6B4226] text-white py-3 rounded-xl font-semibold disabled:bg-gray-400"
+          >
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
 
           {/* Divider */}
@@ -277,7 +327,9 @@ export default function Register() {
 
             <div className="flex-1 border"></div>
 
-            <span className="mx-4 text-gray-500">OR</span>
+            <span className="mx-4 text-gray-500">
+              OR
+            </span>
 
             <div className="flex-1 border"></div>
 
@@ -286,9 +338,7 @@ export default function Register() {
           {/* Google */}
 
           <button className="w-full border rounded-xl py-3 hover:bg-gray-50 font-semibold">
-
             Continue with Google
-
           </button>
 
           {/* Login */}

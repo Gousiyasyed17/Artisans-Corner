@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetails from "./pages/ProductDetails";
 import Category from "./pages/Category";
+import CategoryProducts from "./pages/CategoryProducts";
 
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -15,6 +16,7 @@ import Register from "./pages/Register";
 
 import CustomerDashboard from "./pages/CustomerDashboard";
 import CustomerOrders from "./pages/CustomerOrders";
+import OrderDetails from "./pages/OrderDetails";
 import CustomerProfile from "./pages/CustomerProfile";
 import CustomerReviews from "./pages/CustomerReviews";
 
@@ -43,6 +45,7 @@ import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 
+
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -59,7 +62,9 @@ function App() {
 
         <Route path="/product/:id" element={<ProductDetails />} />
 
-        <Route path="/category/:name" element={<Category />} />
+        <Route path="/categories" element={<Category />} />
+
+        <Route path="/category/:name" element={<CategoryProducts />} />
 
         <Route path="/cart" element={<Cart />} />
 
@@ -83,6 +88,9 @@ function App() {
 
         <Route path="/terms" element={<TermsConditions />} />
 
+        <Route path="/customer/orders"element={<CustomerOrders />}/>
+
+        <Route path="/customer/orders/:id"element={<OrderDetails />}/>
 
 
         {/* Customer */}
@@ -90,11 +98,6 @@ function App() {
         <Route
           path="/customer/dashboard"
           element={<CustomerDashboard />}
-        />
-
-        <Route
-          path="/customer/orders"
-          element={<CustomerOrders />}
         />
 
         <Route

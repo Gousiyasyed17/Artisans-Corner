@@ -1,8 +1,18 @@
 import { Heart, ShoppingBag, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import { addToCart } from "../services/cartService";
 
 export default function ProductCard({ products = [] }) {
   console.log("Products received:", products);
+  const handleAddToCart = async (productId) => {
+  try {
+    await addToCart(productId, 1);
+    alert("Product Added To Cart");
+  } catch (error) {
+    console.error(error);
+    alert(error.response?.data?.message || "Failed To Add Product");
+  }
+};
 
   return (
     <section className="px-8 py-20 bg-[#faf7f2]">
@@ -90,10 +100,13 @@ export default function ProductCard({ products = [] }) {
                       </button>
                     </Link>
 
-                    <button className="flex-1 bg-[#4b2e20] text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#6b432b] transition">
+                    <button
+                      onClick={() => handleAddToCart(item._id)}
+                      className="flex-1 bg-[#4b2e20] text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#6b432b] transition"
+                    >
                       <ShoppingBag size={18} />
                       Add
-                    </button>
+                      </button>
                   </div>
                 </div>
               </div>

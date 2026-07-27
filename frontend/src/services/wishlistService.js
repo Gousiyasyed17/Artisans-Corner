@@ -1,16 +1,25 @@
 import API from "./api";
 
+// Get logged-in user's wishlist
 export const getWishlist = async () => {
-  const response = await API.get("/wishlist");
-  return response.data;
+  const { data } = await API.get("/wishlist");
+  return data.wishlist;
 };
 
-export const addWishlist = async (data) => {
-  const response = await API.post("/wishlist", data);
-  return response.data;
+// Add product to wishlist
+export const addToWishlist = async (productId) => {
+  const { data } = await API.post("/wishlist", {
+    productId,
+  });
+
+  return data;
 };
 
-export const removeWishlist = async (id) => {
-  const response = await API.delete(`/wishlist/${id}`);
-  return response.data;
+// Remove product from wishlist
+export const removeFromWishlist = async (productId) => {
+  const { data } = await API.delete(
+    `/wishlist/${productId}`
+  );
+
+  return data;
 };

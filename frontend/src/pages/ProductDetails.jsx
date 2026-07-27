@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getProductById } from "../services/productService";
+import { addToCart } from "../services/cartService";
+import { addToWishlist } from "../services/wishlistService";
 import {
   Heart,
   Share2,
@@ -9,17 +13,89 @@ import {
   ShieldCheck,
   RotateCcw,
 } from "lucide-react";
-
 export default function ProductDetails() {
-  const images = [
-    "https://images.unsplash.com/photo-1616628182509-6b79fba399a7?w=900",
-    "https://images.unsplash.com/photo-1517705008128-361805f42e86?w=900",
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900",
-    "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=900",
-  ];
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  const [selectedImage, setSelectedImage] = useState(images[0]);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const [selectedImage, setSelectedImage] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const handleAddToCart = async () => {
+  try {
+    await addToCart(product._id, quantity);
+
+    alert("Product Added To Cart");
+  } catch (error) {
+  console.log(error);
+  console.log(error.response);
+
+  alert(error.response?.data?.message || error.message);
+}
+};
+const handleBuyNow = async () => {
+  try {
+    await addToCart(product._id, quantity);
+    navigate("/checkout");
+  } catch (error) {
+    console.log("Buy Now Error:", error);
+
+    alert(
+      error.response?.data?.message ||
+      "Failed to continue with Buy Now"
+    );
+  }
+};
+const handleAddToWishlist = async () => {
+  try {
+    await addToWishlist(product._id);
+
+    alert("Product Added To Wishlist");
+  } catch (error) {
+    console.log("Wishlist Error:", error);
+    console.log(error.response);
+
+    alert(
+      error.response?.data?.message ||
+        "Failed to add product to wishlist"
+    );
+  }
+};
+  useEffect(() => {
+  const fetchProduct = async () => {
+    try {
+      const data = await getProductById(id);
+
+      setProduct(data);
+
+      if (data.images && data.images.length > 0) {
+        setSelectedImage(data.images[0]);
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProduct();
+}, [id]);
+if (loading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      Loading...
+    </div>
+  );
+}
+
+if (!product) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      Product Not Found
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-[#FFF8F2] py-10 px-6">
@@ -44,7 +120,7 @@ export default function ProductDetails() {
 
           <div className="flex gap-4 mt-6">
 
-            {images.map((image, index) => (
+            {product.images?.map((image, index) => (
 
               <button
                 key={index}
@@ -82,13 +158,13 @@ export default function ProductDetails() {
 
           <h1 className="text-5xl font-bold text-[#4B2E20] mt-6">
 
-            Premium Ceramic Flower Vase
+            {product.name}
 
           </h1>
 
           <p className="text-gray-500 mt-3">
 
-            Product ID : AC-PRD-1001
+            Product ID : {product._id}
 
           </p>
 
@@ -113,13 +189,13 @@ export default function ProductDetails() {
 
             <span className="font-semibold">
 
-              4.9
+              {product.rating}
 
             </span>
 
             <span className="text-gray-500">
 
-              (248 Reviews)
+              ({product.numReviews || 0} Reviews)
 
             </span>
 
@@ -133,20 +209,16 @@ export default function ProductDetails() {
 
               <span className="text-5xl font-bold text-[#4B2E20]">
 
-                ₹2,499
+                ₹{product.price}
 
               </span>
 
               <span className="text-2xl line-through text-gray-400">
-
-                ₹3,299
-
+                ₹{Math.round(product.price * 1.2)}
               </span>
 
               <span className="bg-green-100 text-green-700 px-3 py-2 rounded-full">
-
-                24% OFF
-
+                20% OFF
               </span>
 
             </div>
@@ -156,10 +228,7 @@ export default function ProductDetails() {
           {/* Description */}
 
           <p className="mt-8 text-gray-600 leading-8">
-
-            Beautiful handcrafted ceramic flower vase made by skilled Indian
-            artisans. Perfect for home décor, living rooms, offices and gifts.
-
+            {product.description}
           </p>
 
           {/* Stock */}
@@ -168,7 +237,7 @@ export default function ProductDetails() {
 
             <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full">
 
-              In Stock (18 Left)
+              In Stock ({product.stock} Left)
 
             </span>
 
@@ -216,28 +285,33 @@ export default function ProductDetails() {
 
           <div className="grid grid-cols-2 gap-4 mt-10">
 
-            <button className="bg-[#4B2E20] text-white py-4 rounded-2xl hover:bg-[#6B4226]">
+            <button
+              onClick={handleAddToCart}
+              className="bg-[#4B2E20] text-white py-4 rounded-2xl hover:bg-[#6B4226]"
+            >
 
               Add to Cart
 
             </button>
 
-            <button className="bg-green-600 text-white py-4 rounded-2xl hover:bg-green-700">
-
+            <button
+              onClick={handleBuyNow}
+              className="bg-green-600 text-white py-4 rounded-2xl hover:bg-green-700"
+            >
               Buy Now
-
             </button>
 
           </div>
 
           <div className="grid grid-cols-2 gap-4 mt-5">
 
-            <button className="border py-4 rounded-2xl flex justify-center items-center gap-3 hover:bg-white">
-
+            <button
+              onClick={handleAddToWishlist}
+              className="border py-4 rounded-2xl flex justify-center items-center gap-3 hover:bg-white"
+            >
               <Heart size={20} />
 
               Wishlist
-
             </button>
 
             <button className="border py-4 rounded-2xl flex justify-center items-center gap-3 hover:bg-white">
@@ -342,7 +416,7 @@ export default function ProductDetails() {
       <div>
 
         <h3 className="text-xl font-bold">
-          Priya Handicrafts
+          {product.seller?.name}for 
         </h3>
 
         <p className="text-gray-500 mt-1">
@@ -438,25 +512,8 @@ export default function ProductDetails() {
   </h2>
 
   <p className="leading-8 text-gray-600">
-
-    This handcrafted ceramic flower vase is created by experienced artisans
-    using premium-quality clay and finished with elegant glazing techniques.
-    Every piece is individually handcrafted, making each vase unique in its
-    texture and appearance.
-
-    <br /><br />
-
-    Perfect for decorating your living room, bedroom, office, hotels,
-    restaurants, cafes, and gifting on weddings, anniversaries, birthdays,
-    festivals, and housewarming ceremonies.
-
-    <br /><br />
-
-    Due to the handmade nature of this product, slight variations in texture,
-    finish, or color enhance its authenticity and charm.
-
+    {product.description}
   </p>
-
 </div>
 
 {/* Product Features */}

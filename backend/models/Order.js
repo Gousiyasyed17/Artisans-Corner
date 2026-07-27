@@ -107,6 +107,40 @@ const orderSchema = new mongoose.Schema(
       ],
       default: "Pending",
     },
+    invoiceNumber: {
+  type: String,
+  default: "",
+},
+
+estimatedDelivery: {
+  type: Date,
+},
+
+returnRequested: {
+  type: Boolean,
+  default: false,
+},
+
+returnReason: {
+  type: String,
+  default: "",
+},
+
+returnStatus: {
+  type: String,
+  enum: [
+    "Not Requested",
+    "Pending",
+    "Approved",
+    "Rejected",
+    "Completed",
+  ],
+  default: "Not Requested",
+},
+
+returnedAt: {
+  type: Date,
+},
 
     deliveredAt: {
       type: Date,

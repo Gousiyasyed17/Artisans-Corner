@@ -1,74 +1,189 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Heart,
   ShoppingCart,
   Trash2,
   Search,
   Star,
+  Eye,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+
+import {
+  getWishlist,
+  removeFromWishlist,
+} from "../services/wishlistService";
+
+import { addToCart } from "../services/cartService";
 
 export default function Wishlist() {
+  const [wishlist, setWishlist] = useState([]);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("Newest");
+  const [loading, setLoading] = useState(true);
+  const [movingId, setMovingId] = useState(null);
 
-  const [wishlist, setWishlist] = useState([
-    {
-      id: 1,
-      name: "Premium Ceramic Vase",
-      price: 2499,
-      oldPrice: 3299,
-      rating: 4.9,
-      image:
-        "https://images.unsplash.com/photo-1616628182509-6b79fba399a7?w=600",
-    },
-    {
-      id: 2,
-      name: "Handwoven Wall Basket",
-      price: 1599,
-      oldPrice: 2099,
-      rating: 4.8,
-      image:
-        "https://images.unsplash.com/photo-1517705008128-361805f42e86?w=600",
-    },
-    {
-      id: 3,
-      name: "Wooden Table Decor",
-      price: 1899,
-      oldPrice: 2499,
-      rating: 4.7,
-      image:
-        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600",
-    },
-    {
-      id: 4,
-      name: "Luxury Handmade Lamp",
-      price: 3999,
-      oldPrice: 4999,
-      rating: 5.0,
-      image:
-        "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=600",
-    },
-  ]);
+  // =========================
+  // LOAD WISHLIST
+  // =========================
 
-  const removeItem = (id) => {
-    setWishlist((prev) => prev.filter((item) => item.id !== id));
+  const loadWishlist = async () => {
+    try {
+      setLoading(true);
+
+      const data = await getWishlist();
+
+      setWishlist(data?.products || []);
+    } catch (error) {
+      console.error("Wishlist Load Error:", error);
+
+      setWishlist([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    loadWishlist();
+  }, []);
+
+  // =========================
+  // REMOVE PRODUCT
+  // =========================
+
+  const removeItem = async (productId) => {
+    try {
+      await removeFromWishlist(productId);
+
+      setWishlist((prev) =>
+        prev.filter(
+          (product) => product._id !== productId
+        )
+      );
+    } catch (error) {
+      console.error(
+        "Remove Wishlist Error:",
+        error
+      );
+
+      alert(
+        error.response?.data?.message ||
+          "Failed to remove product"
+      );
+    }
+  };
+
+  // =========================
+  // MOVE PRODUCT TO CART
+  // =========================
+
+  const moveToCart = async (productId) => {
+    try {
+      setMovingId(productId);
+
+      await addToCart(productId, 1);
+
+      await removeFromWishlist(productId);
+
+      setWishlist((prev) =>
+        prev.filter(
+          (product) => product._id !== productId
+        )
+      );
+
+      alert("Product moved to cart");
+    } catch (error) {
+      console.error(
+        "Move To Cart Error:",
+        error
+      );
+
+      alert(
+        error.response?.data?.message ||
+          "Failed to move product to cart"
+      );
+    } finally {
+      setMovingId(null);
+    }
+  };
+
+  // =========================
+  // SEARCH + SORT
+  // =========================
+
   const filteredWishlist = useMemo(() => {
-    let items = wishlist.filter((item) =>
-      item.name.toLowerCase().includes(search.toLowerCase())
+    const items = wishlist.filter((product) =>
+      product?.name
+        ?.toLowerCase()
+        .includes(search.toLowerCase())
     );
 
     if (sort === "Price Low") {
-      items.sort((a, b) => a.price - b.price);
+      return [...items].sort(
+        (a, b) =>
+          Number(a.price) - Number(b.price)
+      );
     }
 
     if (sort === "Price High") {
-      items.sort((a, b) => b.price - a.price);
+      return [...items].sort(
+        (a, b) =>
+          Number(b.price) - Number(a.price)
+      );
     }
 
     return items;
   }, [wishlist, search, sort]);
+
+  // =========================
+  // PRODUCT IMAGE
+  // =========================
+
+  const getProductImage = (product) => {
+    const image = product?.images?.[0];
+
+    if (!image) {
+      return "https://picsum.photos/500/500";
+    }
+
+    if (
+      image.startsWith("http://") ||
+      image.startsWith("https://")
+    ) {
+      return image;
+    }
+
+    return `http://localhost:5000/${image}`;
+  };
+
+  // =========================
+  // LOADING
+  // =========================
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FFF8F2] flex items-center justify-center">
+
+        <div className="text-center">
+
+          <Heart
+            size={60}
+            className="mx-auto text-[#4B2E20]"
+          />
+
+          <h2 className="text-2xl font-bold text-[#4B2E20] mt-5">
+            Loading Wishlist...
+          </h2>
+
+        </div>
+
+      </div>
+    );
+  }
+
+  // =========================
+  // EMPTY WISHLIST
+  // =========================
 
   if (wishlist.length === 0) {
     return (
@@ -79,18 +194,22 @@ export default function Wishlist() {
           className="text-[#6B4226] mb-6"
         />
 
-        <h1 className="text-4xl font-bold text-[#4B2E20]">
+        <h1 className="text-4xl font-bold text-[#4B2E20] text-center">
           Your Wishlist is Empty
         </h1>
 
         <p className="text-gray-500 mt-4 text-center max-w-md">
-          Save handcrafted products that you love and access
-          them anytime.
+          Save handcrafted products that you love and
+          access them anytime.
         </p>
 
-        <button className="mt-8 bg-[#4B2E20] hover:bg-[#6B4226] text-white px-8 py-4 rounded-2xl">
-          Continue Shopping
-        </button>
+        <Link to="/products">
+
+          <button className="mt-8 bg-[#4B2E20] hover:bg-[#6B4226] text-white px-8 py-4 rounded-2xl transition">
+            Continue Shopping
+          </button>
+
+        </Link>
 
       </div>
     );
@@ -101,9 +220,33 @@ export default function Wishlist() {
 
       <div className="max-w-7xl mx-auto">
 
-        <h1 className="text-4xl font-bold text-[#4B2E20] mb-10">
-          My Wishlist
-        </h1>
+        {/* HEADER */}
+
+        <div className="flex items-center gap-3 mb-10">
+
+          <Heart
+            size={35}
+            className="text-[#4B2E20]"
+          />
+
+          <div>
+
+            <h1 className="text-4xl font-bold text-[#4B2E20]">
+              My Wishlist
+            </h1>
+
+            <p className="text-gray-500 mt-2">
+              {wishlist.length} saved{" "}
+              {wishlist.length === 1
+                ? "product"
+                : "products"}
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* SEARCH + SORT */}
 
         <div className="flex flex-col lg:flex-row gap-5 justify-between mb-10">
 
@@ -118,16 +261,20 @@ export default function Wishlist() {
               type="text"
               placeholder="Search wishlist..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl border outline-none"
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              className="w-full pl-12 pr-4 py-3 rounded-xl border bg-white outline-none focus:border-[#4B2E20]"
             />
 
           </div>
 
           <select
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="border rounded-xl px-5 py-3 outline-none"
+            onChange={(e) =>
+              setSort(e.target.value)
+            }
+            className="border bg-white rounded-xl px-5 py-3 outline-none"
           >
             <option>Newest</option>
             <option>Price Low</option>
@@ -136,83 +283,180 @@ export default function Wishlist() {
 
         </div>
 
-        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-8">
-                      {filteredWishlist.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300"
-            >
-              <div className="relative">
+        {/* NO SEARCH RESULTS */}
 
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full h-72 object-cover"
-                />
+        {filteredWishlist.length === 0 ? (
 
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="absolute top-4 right-4 bg-white p-2 rounded-full shadow hover:bg-red-100 transition"
+          <div className="bg-white rounded-3xl p-16 text-center shadow">
+
+            <Search
+              size={50}
+              className="mx-auto text-gray-400"
+            />
+
+            <h2 className="text-2xl font-bold text-[#4B2E20] mt-5">
+              No Products Found
+            </h2>
+
+            <p className="text-gray-500 mt-2">
+              Try another search.
+            </p>
+
+          </div>
+
+        ) : (
+
+          /* PRODUCTS */
+
+          <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-8">
+
+            {filteredWishlist.map((product) => {
+
+              const oldPrice = Math.round(
+                Number(product.price || 0) * 1.2
+              );
+
+              return (
+                <div
+                  key={product._id}
+                  className="bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-2xl transition duration-300"
                 >
-                  <Trash2 size={18} className="text-red-500" />
-                </button>
 
-                <div className="absolute top-4 left-4 bg-[#4B2E20] text-white px-3 py-1 rounded-full text-sm">
-                  ❤️ Saved
+                  {/* IMAGE */}
+
+                  <div className="relative overflow-hidden">
+
+                    <Link
+                      to={`/product/${product._id}`}
+                    >
+
+                      <img
+                        src={getProductImage(product)}
+                        alt={product.name}
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            "https://picsum.photos/500/500";
+                        }}
+                        className="w-full h-72 object-cover hover:scale-105 transition duration-500"
+                      />
+
+                    </Link>
+
+                    {/* REMOVE */}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        removeItem(product._id)
+                      }
+                      className="absolute top-4 right-4 bg-white p-3 rounded-full shadow hover:bg-red-100 transition"
+                    >
+                      <Trash2
+                        size={18}
+                        className="text-red-500"
+                      />
+                    </button>
+
+                    {/* SAVED */}
+
+                    <div className="absolute top-4 left-4 bg-[#4B2E20] text-white px-3 py-1 rounded-full text-sm">
+                      ♥ Saved
+                    </div>
+
+                  </div>
+
+                  {/* DETAILS */}
+
+                  <div className="p-5">
+
+                    <Link
+                      to={`/product/${product._id}`}
+                    >
+
+                      <h2 className="text-xl font-bold text-[#4B2E20] hover:text-[#B8860B] transition">
+                        {product.name}
+                      </h2>
+
+                    </Link>
+
+                    {/* RATING */}
+
+                    <div className="flex items-center gap-2 mt-3">
+
+                      <Star
+                        size={18}
+                        fill="#FACC15"
+                        stroke="#FACC15"
+                      />
+
+                      <span className="font-medium">
+                        {product.rating || 0}
+                      </span>
+
+                    </div>
+
+                    {/* PRICE */}
+
+                    <div className="flex items-center gap-3 mt-4">
+
+                      <span className="text-2xl font-bold text-[#4B2E20]">
+                        ₹{product.price}
+                      </span>
+
+                      <span className="line-through text-gray-400">
+                        ₹{oldPrice}
+                      </span>
+
+                    </div>
+
+                    {/* VIEW PRODUCT */}
+
+                    <Link
+                      to={`/product/${product._id}`}
+                      className="block"
+                    >
+
+                      <button className="w-full mt-6 flex items-center justify-center gap-2 border border-[#4B2E20] text-[#4B2E20] hover:bg-[#FFF8F2] py-3 rounded-2xl transition">
+
+                        <Eye size={19} />
+
+                        View Product
+
+                      </button>
+
+                    </Link>
+
+                    {/* MOVE TO CART */}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        moveToCart(product._id)
+                      }
+                      disabled={
+                        movingId === product._id
+                      }
+                      className="w-full mt-3 flex items-center justify-center gap-2 bg-[#4B2E20] hover:bg-[#6B4226] disabled:opacity-60 text-white py-3 rounded-2xl transition"
+                    >
+
+                      <ShoppingCart size={20} />
+
+                      {movingId === product._id
+                        ? "Moving..."
+                        : "Move to Cart"}
+
+                    </button>
+
+                  </div>
+
                 </div>
+              );
+            })}
 
-              </div>
-
-              <div className="p-5">
-
-                <h2 className="text-xl font-bold text-[#4B2E20]">
-                  {item.name}
-                </h2>
-
-                <div className="flex items-center gap-2 mt-3">
-
-                  <Star
-                    size={18}
-                    fill="#FACC15"
-                    stroke="#FACC15"
-                  />
-
-                  <span className="font-medium">
-                    {item.rating}
-                  </span>
-
-                </div>
-
-                <div className="flex items-center gap-3 mt-4">
-
-                  <span className="text-2xl font-bold text-[#4B2E20]">
-                    ₹{item.price}
-                  </span>
-
-                  <span className="line-through text-gray-400">
-                    ₹{item.oldPrice}
-                  </span>
-
-                </div>
-
-                <button className="w-full mt-6 flex items-center justify-center gap-2 bg-[#4B2E20] hover:bg-[#6B4226] text-white py-3 rounded-2xl transition">
-
-                  <ShoppingCart size={20} />
-
-                  Move to Cart
-
-                </button>
-
-              </div>
-
-            </div>
-          ))}
-
-        </div>
+          </div>
+        )}
 
       </div>
-
     </div>
   );
 }
-        

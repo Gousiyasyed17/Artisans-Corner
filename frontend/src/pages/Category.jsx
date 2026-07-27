@@ -138,7 +138,7 @@ export default function Category() {
                 </p>
 
                 <Link
-                  to={`/category/${category.id}`}
+                  to={`/category/${encodeURIComponent(category.name)}`}
                   className="mt-6 inline-flex items-center gap-2 bg-[#4B2E20] hover:bg-[#6B4226] text-white px-6 py-3 rounded-xl transition"
                 >
                   Explore
