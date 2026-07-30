@@ -26,6 +26,17 @@ const reviewSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
+    images: [
+      {
+        type: String,
+      },
+    ],
+
+    sellerReply: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

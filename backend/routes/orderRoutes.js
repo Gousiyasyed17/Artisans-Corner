@@ -8,6 +8,9 @@ const {
   cancelOrder,
   updateOrderStatus,
   getAllOrders,
+  getSellerOrders,
+  getSellerSalesHistory,
+  getSellerEarnings,
 } = require("../controllers/orderController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -20,6 +23,19 @@ router.get("/my-orders", protect, getMyOrders);
 
 // Admin - All Orders
 router.get("/", protect, getAllOrders);
+
+router.get("/seller-orders", protect, getSellerOrders);
+
+router.get(
+  "/seller-sales-history",
+  protect,
+  getSellerSalesHistory
+);
+router.get(
+  "/seller-earnings",
+  protect,
+  getSellerEarnings
+);
 
 // Single Order
 router.get("/:id", protect, getOrderById);

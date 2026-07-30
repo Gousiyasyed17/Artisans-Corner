@@ -136,3 +136,32 @@ exports.deleteProduct = async (req, res) => {
     });
   }
 };
+
+// ======================================
+// GET SELLER PRODUCTS
+// ======================================
+
+exports.getSellerProducts = async (req, res) => {
+  try {
+
+    const products = await Product.find({
+      seller: req.user._id,
+    })
+      .populate("category", "name")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      products,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};

@@ -78,3 +78,68 @@ exports.deleteReview = async (req, res) => {
     });
   }
 };
+
+exports.updateReview = async (req, res) => {
+  try {
+
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    if (review.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    review.rating = req.body.rating;
+    review.comment = req.body.comment;
+
+    await review.save();
+
+    res.json({
+      success: true,
+      review,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+exports.replyReview = async (req, res) => {
+
+  try {
+
+    const review = await Review.findById(req.params.id);
+
+    review.sellerReply = req.body.reply;
+
+    await review.save();
+
+    res.json({
+      success: true,
+      review,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+
+};

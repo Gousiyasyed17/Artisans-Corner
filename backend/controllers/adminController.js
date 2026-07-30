@@ -86,8 +86,7 @@ exports.getProducts = async (req, res) => {
   try {
 
     const products = await Product.find()
-      .populate("seller", "name")
-      .populate("category", "name");
+      .populate("seller", "name");
 
     res.json({
       success: true,

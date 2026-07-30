@@ -1,4 +1,7 @@
 import React, { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../services/api";
+import { uploadImage } from "../services/uploadService";
 import {
   Upload,
   ImagePlus,
@@ -14,6 +17,7 @@ import {
 
 export default function AddProduct() {
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
 
   const MAX_IMAGES = 5;
 
@@ -101,18 +105,60 @@ export default function AddProduct() {
     handleFiles(e.dataTransfer.files);
   };
 
-  const handleSubmit = (status) => {
+  const handleSubmit = async (status) => {
+  try {
+
+    if (images.length === 0) {
+      alert("Please upload at least one image");
+      return;
+    }
+
+    const uploadedImages = [];
+
+    for (const image of images) {
+      const imageUrl = await uploadImage(image.file);
+      uploadedImages.push(imageUrl);
+    }
+
     const finalData = {
-      ...product,
+      name: product.productName,
+      description: product.description,
+      category: product.category,
+      price: Number(product.price),
+      stock: Number(product.stock),
+
+      // Cloudinary image URLs
+      images: uploadedImages,
+
+      material: product.material,
+      color: product.color,
+      dimensions: product.dimensions,
+      weight: product.weight,
+      tags: product.tags,
+      shippingCharge: Number(product.shippingCharge),
+      estimatedDelivery: product.estimatedDelivery,
+      discount: Number(product.discount),
+      sku: product.sku,
       status,
-      images,
-      coverImage,
     };
 
-    console.log(finalData);
+    await API.post("/products", finalData);
 
-    alert(`Product ${status} successfully!`);
-  };
+    alert("Product Added Successfully");
+
+    navigate("/seller/products");
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      error.response?.data?.message ||
+      "Failed to add product"
+    );
+
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#FFF8F2] py-10 px-6">
@@ -668,7 +714,7 @@ export default function AddProduct() {
         </div>
 
       </div>
-          </div>
+    </div>
 
   );
 }

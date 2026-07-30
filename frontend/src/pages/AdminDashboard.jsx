@@ -1,4 +1,5 @@
-import React from "react";
+import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import {
   Users,
   Store,
@@ -9,71 +10,67 @@ import {
   Clock,
   TrendingUp,
 } from "lucide-react";
+import {
+  getDashboard,
+  getOrders,
+} from "../services/adminService";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const [dashboard, setDashboard] = useState({
+    users: 0,
+    sellers: 0,
+    products: 0,
+    orders: 0,
+    revenue: 0,
+  });
+
+  const [recentOrders, setRecentOrders] = useState([]);
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  const loadDashboard = async () => {
+    try {
+      const dashboardData = await getDashboard();
+      setDashboard(dashboardData);
+
+      const orders = await getOrders();
+      setRecentOrders(orders.slice(0, 5));
+
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const stats = [
     {
       title: "Total Users",
-      value: "12,540",
+      value: dashboard.users,
       icon: <Users size={32} className="text-blue-600" />,
     },
     {
       title: "Total Sellers",
-      value: "1,248",
+      value: dashboard.sellers,
       icon: <Store size={32} className="text-orange-600" />,
     },
     {
       title: "Products",
-      value: "8,936",
+      value: dashboard.products,
       icon: <Package size={32} className="text-green-600" />,
     },
     {
       title: "Orders",
-      value: "25,412",
+      value: dashboard.orders,
       icon: <ShoppingCart size={32} className="text-purple-600" />,
     },
     {
       title: "Revenue",
-      value: "₹18,52,600",
+      value: `₹${dashboard.revenue}`,
       icon: <IndianRupee size={32} className="text-emerald-600" />,
-    },
-    {
-      title: "Pending Sellers",
-      value: "32",
-      icon: <UserCheck size={32} className="text-red-500" />,
     },
   ];
 
-  const recentOrders = [
-    {
-      id: "#ORD1021",
-      customer: "Rahul Sharma",
-      seller: "Craft Villa",
-      amount: "₹2,450",
-      status: "Delivered",
-    },
-    {
-      id: "#ORD1022",
-      customer: "Ayesha Khan",
-      seller: "Clay Studio",
-      amount: "₹1,200",
-      status: "Processing",
-    },
-    {
-      id: "#ORD1023",
-      customer: "Riya Patel",
-      seller: "Wood World",
-      amount: "₹3,890",
-      status: "Pending",
-    },
-    {
-      id: "#ORD1024",
-      customer: "Arjun Kumar",
-      seller: "Art Heaven",
-      amount: "₹890",
-      status: "Shipped",
-    },
-  ];
 
   const pendingVendors = [
     "Handmade Dreams",
@@ -161,40 +158,39 @@ export default function AdminDashboard() {
                 {recentOrders.map((order) => (
 
                   <tr
-                    key={order.id}
+                    key={order._id.slice(-6)}
                     className="border-t"
                   >
 
                     <td className="p-4 font-semibold">
-                      {order.id}
+                      {order._id.slice(-6)}
                     </td>
 
                     <td className="text-center">
-                      {order.customer}
+                      {order.customer?.name}
                     </td>
 
                     <td className="text-center">
-                      {order.seller}
+                      {order.items?.[0]?.product?.name}
                     </td>
 
                     <td className="text-center font-semibold">
-                      {order.amount}
+                      ₹{order.totalPrice}
                     </td>
 
                     <td className="text-center">
 
                       <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          order.status === "Delivered"
+                        className={`px-3 py-1 rounded-full text-sm ${order.orderStatus === "Delivered"
                             ? "bg-green-100 text-green-700"
-                            : order.status === "Processing"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : order.status === "Shipped"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
+                            : order.orderStatus === "Processing"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : order.orderStatus === "Shipped"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
                       >
-                        {order.status}
+                        {order.orderStatus}
                       </span>
 
                     </td>
@@ -254,19 +250,31 @@ export default function AdminDashboard() {
 
           <div className="grid md:grid-cols-4 gap-5">
 
-            <button className="bg-[#4B2E20] text-white py-4 rounded-xl hover:bg-[#6B4226]">
+            <button
+              onClick={() => navigate("/admin/users")}
+              className="bg-[#4B2E20] text-white py-4 rounded-xl hover:bg-[#6B4226]"
+            >
               Manage Users
             </button>
 
-            <button className="bg-[#4B2E20] text-white py-4 rounded-xl hover:bg-[#6B4226]">
+            <button
+              onClick={() => navigate("/admin/vendors")}
+              className="bg-[#4B2E20] text-white py-4 rounded-xl hover:bg-[#6B4226]"
+            >
               Manage Sellers
             </button>
 
-            <button className="bg-[#4B2E20] text-white py-4 rounded-xl hover:bg-[#6B4226]">
+            <button
+              onClick={() => navigate("/admin/products")}
+              className="bg-[#4B2E20] text-white py-4 rounded-xl hover:bg-[#6B4226]"
+            >
               Manage Products
             </button>
 
-            <button className="bg-[#4B2E20] text-white py-4 rounded-xl hover:bg-[#6B4226]">
+            <button
+              onClick={() => navigate("/admin/reports")}
+              className="bg-[#4B2E20] text-white py-4 rounded-xl hover:bg-[#6B4226]"
+            >
               View Reports
             </button>
 

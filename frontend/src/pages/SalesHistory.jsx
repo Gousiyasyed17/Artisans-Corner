@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   IndianRupee,
   ShoppingBag,
@@ -7,47 +7,58 @@ import {
   Download,
 } from "lucide-react";
 
-const sales = [
-  {
-    id: "#SALE001",
-    customer: "Rahul Sharma",
-    product: "Ceramic Flower Vase",
-    date: "20 Jul 2026",
-    amount: "₹999",
-  },
-  {
-    id: "#SALE002",
-    customer: "Priya Singh",
-    product: "Wooden Wall Decor",
-    date: "19 Jul 2026",
-    amount: "₹2,499",
-  },
-  {
-    id: "#SALE003",
-    customer: "Arjun Patel",
-    product: "Macrame Hanging",
-    date: "18 Jul 2026",
-    amount: "₹1,299",
-  },
-  {
-    id: "#SALE004",
-    customer: "Sneha Reddy",
-    product: "Clay Lamp",
-    date: "17 Jul 2026",
-    amount: "₹799",
-  },
-];
+import { getSellerSalesHistory } from "../services/orderService";
 
 export default function SalesHistory() {
+  const [sales, setSales] = useState([]);
+  const [summary, setSummary] = useState({
+    totalRevenue: 0,
+    productsSold: 0,
+    monthlyRevenue: 0,
+  });
+
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    loadSales();
+  }, []);
+
+  const loadSales = async () => {
+    try {
+      const data = await getSellerSalesHistory();
+
+      setSales(data.sales || []);
+
+      setSummary({
+        totalRevenue: data.totalRevenue || 0,
+        productsSold: data.productsSold || 0,
+        monthlyRevenue: data.monthlyRevenue || 0,
+      });
+    } catch (error) {
+      console.error("Sales History Error:", error);
+    }
+  };
+
+  const filteredSales = sales.filter((sale) => {
+    const customer =
+      sale.customer?.name?.toLowerCase() || "";
+
+    const product =
+      sale.items?.[0]?.product?.name?.toLowerCase() || "";
+
+    return (
+      customer.includes(search.toLowerCase()) ||
+      product.includes(search.toLowerCase())
+    );
+  });
+
   return (
     <div className="min-h-screen bg-[#FFF8F2] p-8">
-
       <div className="max-w-7xl mx-auto">
 
         <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
 
           <div>
-
             <h1 className="text-4xl font-bold text-[#4B2E20]">
               Sales History
             </h1>
@@ -55,15 +66,11 @@ export default function SalesHistory() {
             <p className="text-gray-500 mt-2">
               Track your completed sales and revenue.
             </p>
-
           </div>
 
           <button className="flex items-center gap-2 bg-[#4B2E20] text-white px-6 py-3 rounded-xl hover:bg-[#6B4226]">
-
             <Download size={18} />
-
             Download Report
-
           </button>
 
         </div>
@@ -84,7 +91,7 @@ export default function SalesHistory() {
             </h2>
 
             <p className="text-3xl font-bold text-[#4B2E20]">
-              ₹2,45,800
+              ₹{summary.totalRevenue}
             </p>
 
           </div>
@@ -101,7 +108,7 @@ export default function SalesHistory() {
             </h2>
 
             <p className="text-3xl font-bold text-[#4B2E20]">
-              326
+              {summary.productsSold}
             </p>
 
           </div>
@@ -118,14 +125,14 @@ export default function SalesHistory() {
             </h2>
 
             <p className="text-3xl font-bold text-[#4B2E20]">
-              ₹42,500
+              ₹{summary.monthlyRevenue}
             </p>
 
           </div>
 
         </div>
 
-        {/* Search & Filter */}
+        {/* Search */}
 
         <div className="grid md:grid-cols-2 gap-5 mt-8">
 
@@ -136,17 +143,23 @@ export default function SalesHistory() {
             <input
               type="text"
               placeholder="Search customer or product..."
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
               className="ml-4 outline-none w-full"
             />
 
           </div>
 
           <select className="bg-white rounded-2xl shadow p-4 outline-none">
+
             <option>All Time</option>
             <option>Today</option>
             <option>This Week</option>
             <option>This Month</option>
             <option>This Year</option>
+
           </select>
 
         </div>
@@ -161,10 +174,16 @@ export default function SalesHistory() {
 
               <tr>
 
-                <th className="text-left p-5">Sale ID</th>
+                <th className="text-left p-5">
+                  Sale ID
+                </th>
+
                 <th>Customer</th>
+
                 <th>Product</th>
+
                 <th>Date</th>
+
                 <th>Amount</th>
 
               </tr>
@@ -173,36 +192,55 @@ export default function SalesHistory() {
 
             <tbody>
 
-              {sales.map((sale) => (
+              {filteredSales.length === 0 ? (
 
-                <tr
-                  key={sale.id}
-                  className="border-t"
-                >
+                <tr>
 
-                  <td className="p-5 font-semibold">
-                    {sale.id}
-                  </td>
-
-                  <td className="text-center">
-                    {sale.customer}
-                  </td>
-
-                  <td className="text-center">
-                    {sale.product}
-                  </td>
-
-                  <td className="text-center">
-                    {sale.date}
-                  </td>
-
-                  <td className="text-center font-bold text-green-600">
-                    {sale.amount}
+                  <td
+                    colSpan="5"
+                    className="text-center p-10 text-gray-500"
+                  >
+                    No Sales Found
                   </td>
 
                 </tr>
 
-              ))}
+              ) : (
+
+                filteredSales.map((sale) => (
+
+                  <tr
+                    key={sale._id}
+                    className="border-t"
+                  >
+
+                    <td className="p-5 font-semibold">
+                      #{sale._id.slice(-6)}
+                    </td>
+
+                    <td className="text-center">
+                      {sale.customer?.name}
+                    </td>
+
+                    <td className="text-center">
+                      {sale.items?.[0]?.product?.name}
+                    </td>
+
+                    <td className="text-center">
+                      {new Date(
+                        sale.createdAt
+                      ).toLocaleDateString()}
+                    </td>
+
+                    <td className="text-center font-bold text-green-600">
+                      ₹{sale.totalPrice}
+                    </td>
+
+                  </tr>
+
+                ))
+
+              )}
 
             </tbody>
 
@@ -211,7 +249,6 @@ export default function SalesHistory() {
         </div>
 
       </div>
-
     </div>
   );
 }

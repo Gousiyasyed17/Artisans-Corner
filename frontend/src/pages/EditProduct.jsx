@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Upload,
   ImagePlus,
@@ -10,9 +11,16 @@ import {
   RefreshCw,
   AlertTriangle,
 } from "lucide-react";
+import {
+  getProductById,
+  updateProduct,
+  deleteProduct,
+} from "../services/productService";
 
 export default function EditProduct() {
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
+  const { id } = useParams();
 
   const MAX_IMAGES = 5;
 
@@ -44,40 +52,50 @@ export default function EditProduct() {
   });
 
   useEffect(() => {
-    const sampleProduct = {
-      productName: "Handmade Ceramic Vase",
-      description:
-        "Beautiful handcrafted ceramic vase made by skilled artisans.",
-      category: "Home Decor",
-      subCategory: "Vases",
-      price: "2499",
-      discount: "10",
-      stock: "18",
-      sku: "ART1001",
-      material: "Ceramic",
-      dimensions: "12 x 8 Inches",
-      weight: "700 g",
-      color: "Ivory White",
-      tags: "ceramic, handmade, vase",
-      shippingCharge: "120",
-      estimatedDelivery: "3-5 Days",
+
+  loadProduct();
+
+}, []);
+
+const loadProduct = async () => {
+
+  try {
+
+    const data = await getProductById(id);
+
+    setProduct({
+      productName: data.name,
+      description: data.description,
+      category: data.category,
+      subCategory: "",
+      price: data.price,
+      discount: data.discount || 0,
+      stock: data.stock,
+      sku: data.sku || "",
+      material: data.material || "",
+      dimensions: data.dimensions || "",
+      weight: data.weight || "",
+      color: data.color || "",
+      tags: data.tags || "",
+      shippingCharge: data.shippingCharge || 0,
+      estimatedDelivery:
+        data.estimatedDelivery || "",
       status: "Published",
-    };
+    });
 
-    setProduct(sampleProduct);
+    setImages(
+      data.images.map((img) => ({
+        preview: img,
+      }))
+    );
 
-    setImages([
-      {
-        preview:
-          "https://images.unsplash.com/photo-1612196808214-b8e1d6145a54?w=600",
-      },
-      {
-        preview:
-          "https://images.unsplash.com/photo-1616628182509-6a5f3386d2dd?w=600",
-      },
-    ]);
-  }, []);
+  } catch (error) {
 
+    console.error(error);
+
+  }
+
+};
   const handleChange = (e) => {
     setProduct({
       ...product,
@@ -123,6 +141,39 @@ export default function EditProduct() {
       setCoverImage(0);
     }
   };
+  const handleUpdate = async () => {
+  try {
+
+    await updateProduct(id, {
+      name: product.productName,
+      description: product.description,
+      category: product.category,
+      price: Number(product.price),
+      stock: Number(product.stock),
+      images: images.map((img) => img.preview),
+      material: product.material,
+      color: product.color,
+      dimensions: product.dimensions,
+      weight: product.weight,
+      discount: Number(product.discount),
+      estimatedDelivery: product.estimatedDelivery,
+    });
+
+    alert("Product Updated Successfully");
+
+    navigate("/seller/products");
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      error.response?.data?.message ||
+      "Failed to update product"
+    );
+
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#FFF8F2] py-10 px-6">
@@ -680,6 +731,7 @@ export default function EditProduct() {
               <div className="space-y-4">
 
                 <button
+                  onClick={handleUpdate}
                   className="w-full bg-[#4B2E20] hover:bg-[#6B4226] text-white py-4 rounded-xl font-semibold flex justify-center items-center gap-2"
                 >
                   <Save size={20} />

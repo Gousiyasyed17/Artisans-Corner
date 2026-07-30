@@ -11,20 +11,79 @@ const {
   getReports,
 } = require("../controllers/adminController");
 
-const { protect } = require("../middleware/authMiddleware");
+const {
+  protect,
+  authorize,
+} = require("../middleware/authMiddleware");
 
-router.get("/dashboard", protect, getDashboard);
+// =========================
+// Admin Dashboard
+// =========================
+router.get(
+  "/dashboard",
+  protect,
+  authorize("admin"),
+  getDashboard
+);
 
-router.get("/users", protect, getUsers);
+// =========================
+// All Users
+// =========================
+router.get(
+  "/users",
+  protect,
+  authorize("admin"),
+  getUsers
+);
 
-router.get("/vendors", protect, getSellers);
+// =========================
+// All Sellers
+// =========================
+router.get(
+  "/vendors",
+  protect,
+  authorize("admin"),
+  getSellers
+);
 
-router.get("/products", protect, getProducts);
+// =========================
+// All Products
+// =========================
+router.get(
+  "/products",
+  protect,
+  authorize("admin"),
+  getProducts
+);
 
-router.get("/orders", protect, getOrders);
+// =========================
+// All Orders
+// =========================
+router.get(
+  "/orders",
+  protect,
+  authorize("admin"),
+  getOrders
+);
 
-router.get("/analytics", protect, getAnalytics);
+// =========================
+// Analytics
+// =========================
+router.get(
+  "/analytics",
+  protect,
+  authorize("admin"),
+  getAnalytics
+);
 
-router.get("/reports", protect, getReports);
+// =========================
+// Reports
+// =========================
+router.get(
+  "/reports",
+  protect,
+  authorize("admin"),
+  getReports
+);
 
 module.exports = router;

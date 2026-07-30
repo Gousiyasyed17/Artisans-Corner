@@ -300,3 +300,186 @@ exports.getAllOrders = async (req, res) => {
     });
   }
 };
+
+// ======================================
+// GET SELLER ORDERS
+// ======================================
+
+exports.getSellerOrders = async (req, res) => {
+  try {
+
+    const orders = await Order.find({
+      "items.seller": req.user._id,
+    })
+      .populate("customer", "name email")
+      .populate("items.product", "name images");
+
+    res.status(200).json({
+      success: true,
+      orders,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+// ======================================
+// GET SELLER SALES HISTORY
+// ======================================
+
+exports.getSellerSalesHistory = async (req, res) => {
+  try {
+
+    const orders = await Order.find({
+      "items.seller": req.user._id,
+      
+    })
+      .populate("customer", "name email")
+      .populate("items.product", "name");
+
+    let totalRevenue = 0;
+    let productsSold = 0;
+
+    orders.forEach((order) => {
+      order.items.forEach((item) => {
+        if (
+          item.seller.toString() ===
+          req.user._id.toString()
+        ) {
+          totalRevenue += item.price * item.quantity;
+          productsSold += item.quantity;
+        }
+      });
+    });
+
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    let monthlyRevenue = 0;
+
+    orders.forEach((order) => {
+      const date = new Date(order.createdAt);
+
+      if (
+        date.getMonth() === currentMonth &&
+        date.getFullYear() === currentYear
+      ) {
+        order.items.forEach((item) => {
+          if (
+            item.seller.toString() ===
+            req.user._id.toString()
+          ) {
+            monthlyRevenue +=
+              item.price * item.quantity;
+          }
+        });
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      totalRevenue,
+      productsSold,
+      monthlyRevenue,
+      sales: orders,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+// ======================================
+// GET SELLER EARNINGS
+// ======================================
+
+exports.getSellerEarnings = async (req, res) => {
+  try {
+
+    const orders = await Order.find({
+      "items.seller": req.user._id,
+    })
+      .populate("customer", "name email")
+      .populate("items.product", "name");
+
+    let totalEarnings = 0;
+    let availableBalance = 0;
+    let pendingPayout = 0;
+    let monthlyEarnings = 0;
+
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    orders.forEach((order) => {
+
+      order.items.forEach((item) => {
+
+        if (
+          item.seller.toString() ===
+          req.user._id.toString()
+        ) {
+
+          const amount =
+            item.price * item.quantity;
+
+          totalEarnings += amount;
+
+          if (
+            order.orderStatus === "Delivered"
+          ) {
+            availableBalance += amount;
+          } else {
+            pendingPayout += amount;
+          }
+
+          const date = new Date(
+            order.createdAt
+          );
+
+          if (
+            date.getMonth() === currentMonth &&
+            date.getFullYear() === currentYear
+          ) {
+            monthlyEarnings += amount;
+          }
+
+        }
+
+      });
+
+    });
+
+    res.status(200).json({
+      success: true,
+
+      totalEarnings,
+
+      availableBalance,
+
+      pendingPayout,
+
+      monthlyEarnings,
+
+      transactions: orders,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};

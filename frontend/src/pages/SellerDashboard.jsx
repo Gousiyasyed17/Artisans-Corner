@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   Package,
   ShoppingCart,
@@ -48,6 +49,45 @@ export default function SellerDashboard() {
         <p className="text-gray-500 mt-2">
           Welcome back! Here's an overview of your artisan store.
         </p>
+        <div className="flex flex-wrap gap-4 mt-6">
+
+  <Link
+    to="/seller/products"
+    className="bg-[#4B2E20] text-white px-5 py-3 rounded-xl hover:bg-[#6B4226]"
+  >
+    My Products
+  </Link>
+
+  <Link
+    to="/seller/add-product"
+    className="bg-green-600 text-white px-5 py-3 rounded-xl hover:bg-green-700"
+  >
+    Add Product
+  </Link>
+
+  <Link
+    to="/seller/inventory"
+    className="bg-orange-600 text-white px-5 py-3 rounded-xl hover:bg-orange-700"
+  >
+    Inventory
+  </Link>
+
+  <Link
+    to="/seller/orders"
+    className="bg-blue-600 text-white px-5 py-3 rounded-xl hover:bg-blue-700"
+  >
+    Orders
+  </Link>
+
+  <Link
+    to="/seller/sales-history"
+    className="bg-purple-600 text-white px-5 py-3 rounded-xl hover:bg-purple-700"
+  >
+    Sales History
+  </Link>
+
+</div>
+        
 
         {/* Statistics */}
 

@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getUsers } from "../services/adminService";
+
 import {
   Search,
   Eye,
@@ -8,43 +10,19 @@ import {
 } from "lucide-react";
 
 export default function ManageUsers() {
-  const [users] = useState([
-    {
-      id: "USR001",
-      name: "Rahul Sharma",
-      email: "rahul@gmail.com",
-      role: "Customer",
-      status: "Active",
-    },
-    {
-      id: "USR002",
-      name: "Priya Singh",
-      email: "priya@gmail.com",
-      role: "Seller",
-      status: "Active",
-    },
-    {
-      id: "USR003",
-      name: "Arjun Patel",
-      email: "arjun@gmail.com",
-      role: "Customer",
-      status: "Blocked",
-    },
-    {
-      id: "USR004",
-      name: "Sneha Reddy",
-      email: "sneha@gmail.com",
-      role: "Seller",
-      status: "Active",
-    },
-    {
-      id: "USR005",
-      name: "Mohammed Ali",
-      email: "ali@gmail.com",
-      role: "Customer",
-      status: "Active",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const usersData = await getUsers();
+      setUsers(usersData);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FFF8F2] p-8">
@@ -100,22 +78,30 @@ export default function ManageUsers() {
 
           <div className="bg-white rounded-3xl shadow p-6">
             <h3 className="text-gray-500">Total Users</h3>
-            <p className="text-3xl font-bold text-[#4B2E20] mt-2">12,540</p>
+            <p className="text-3xl font-bold text-[#4B2E20] mt-2">
+              {users.length}
+            </p>
           </div>
 
           <div className="bg-white rounded-3xl shadow p-6">
             <h3 className="text-gray-500">Customers</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">10,050</p>
+            <p className="text-3xl font-bold text-blue-600 mt-2">
+              {users.filter(user => user.role === "customer").length}
+            </p>
           </div>
 
           <div className="bg-white rounded-3xl shadow p-6">
             <h3 className="text-gray-500">Sellers</h3>
-            <p className="text-3xl font-bold text-orange-600 mt-2">2,350</p>
+            <p className="text-3xl font-bold text-orange-600 mt-2">
+              {users.filter(user => user.role === "seller").length}
+            </p>
           </div>
 
           <div className="bg-white rounded-3xl shadow p-6">
             <h3 className="text-gray-500">Blocked</h3>
-            <p className="text-3xl font-bold text-red-600 mt-2">140</p>
+            <p className="text-3xl font-bold text-red-600 mt-2">
+              {users.filter(user => user.role === "admin").length}
+            </p>
           </div>
 
         </div>
@@ -146,12 +132,12 @@ export default function ManageUsers() {
               {users.map((user) => (
 
                 <tr
-                  key={user.id}
+                  key={user._id.slice(-6)}
                   className="border-t hover:bg-gray-50"
                 >
 
                   <td className="p-5 font-semibold">
-                    {user.id}
+                    {user._id.slice(-6)}
                   </td>
 
                   <td className="text-center">
@@ -165,13 +151,12 @@ export default function ManageUsers() {
                   <td className="text-center">
 
                     <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        user.role === "Seller"
+                      className={`px-3 py-1 rounded-full text-sm ${user.role === "seller"
                           ? "bg-orange-100 text-orange-700"
-                          : user.role === "Admin"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}
+                          : user.role === "admin"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
                     >
                       {user.role}
                     </span>
@@ -180,16 +165,9 @@ export default function ManageUsers() {
 
                   <td className="text-center">
 
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        user.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {user.status}
+                    <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                      Active
                     </span>
-
                   </td>
 
                   <td>
@@ -203,21 +181,9 @@ export default function ManageUsers() {
                         />
                       </button>
 
-                      {user.status === "Active" ? (
-                        <button className="bg-yellow-100 p-2 rounded-lg hover:bg-yellow-200">
-                          <UserX
-                            size={18}
-                            className="text-yellow-700"
-                          />
-                        </button>
-                      ) : (
-                        <button className="bg-green-100 p-2 rounded-lg hover:bg-green-200">
-                          <UserCheck
-                            size={18}
-                            className="text-green-700"
-                          />
-                        </button>
-                      )}
+                      <button className="bg-yellow-100 p-2 rounded-lg hover:bg-yellow-200">
+                        <UserX size={18} className="text-yellow-700" />
+                      </button>
 
                       <button className="bg-red-100 p-2 rounded-lg hover:bg-red-200">
                         <Trash2

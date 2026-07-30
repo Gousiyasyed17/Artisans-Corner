@@ -12,6 +12,7 @@ const reviewRoutes = require("./routes/reviewRoutes");
 const sellerRoutes = require("./routes/sellerRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 
 // Load Environment Variables
 dotenv.config();
@@ -37,6 +38,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/customer", customerRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Homepage Route
 app.get("/", (req, res) => {
