@@ -1,7 +1,11 @@
-const express = require("express");
 const dotenv = require("dotenv");
+dotenv.config();
+
+const express = require("express");
 const cors = require("cors");
+
 const connectDB = require("./config/db");
+
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
@@ -13,9 +17,7 @@ const sellerRoutes = require("./routes/sellerRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
-
-// Load Environment Variables
-dotenv.config();
+const invoiceRoutes = require("./routes/invoiceRoutes");
 
 // Connect Database
 connectDB();

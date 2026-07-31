@@ -58,6 +58,12 @@ export default function Navbar() {
         >
           About
         </Link>
+        <Link
+          to="/customer/orders"
+          className="hover:text-[#b8860b] transition"
+        >
+          My Orders
+        </Link>
 
       </div>
 
@@ -93,13 +99,16 @@ export default function Navbar() {
 
         {/* Login */}
         <Link
-          to="/login"
+          to={
+            localStorage.getItem("token")
+              ? "/customer/dashboard"
+              : "/login"
+          }
           title="Account"
           className="text-[#4b2e20] hover:text-[#b8860b] transition"
         >
           <User size={22} />
         </Link>
-
       </div>
 
     </nav>

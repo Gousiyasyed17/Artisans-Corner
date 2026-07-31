@@ -92,6 +92,24 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Paid", "Failed", "Refunded"],
       default: "Pending",
     },
+    platformFee: {
+      type: Number,
+      default: 0,
+    },
+
+    sellerPayout: {
+      type: Number,
+      default: 0,
+    },
+    paymentId: {
+      type: String,
+      default: "",
+    },
+
+    transactionId: {
+      type: String,
+      default: "",
+    },
 
     orderStatus: {
       type: String,
@@ -108,39 +126,39 @@ const orderSchema = new mongoose.Schema(
       default: "Pending",
     },
     invoiceNumber: {
-  type: String,
-  default: "",
-},
+      type: String,
+      default: "",
+    },
 
-estimatedDelivery: {
-  type: Date,
-},
+    estimatedDelivery: {
+      type: Date,
+    },
 
-returnRequested: {
-  type: Boolean,
-  default: false,
-},
+    returnRequested: {
+      type: Boolean,
+      default: false,
+    },
 
-returnReason: {
-  type: String,
-  default: "",
-},
+    returnReason: {
+      type: String,
+      default: "",
+    },
 
-returnStatus: {
-  type: String,
-  enum: [
-    "Not Requested",
-    "Pending",
-    "Approved",
-    "Rejected",
-    "Completed",
-  ],
-  default: "Not Requested",
-},
+    returnStatus: {
+      type: String,
+      enum: [
+        "Not Requested",
+        "Pending",
+        "Approved",
+        "Rejected",
+        "Completed",
+      ],
+      default: "Not Requested",
+    },
 
-returnedAt: {
-  type: Date,
-},
+    returnedAt: {
+      type: Date,
+    },
 
     deliveredAt: {
       type: Date,

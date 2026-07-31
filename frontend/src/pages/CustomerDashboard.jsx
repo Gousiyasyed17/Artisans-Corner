@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ShoppingBag,
   Heart,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 
 export default function CustomerDashboard() {
+  const navigate = useNavigate();
   const stats = [
     {
       title: "Total Orders",
@@ -87,7 +89,12 @@ export default function CustomerDashboard() {
 
             <div
               key={index}
-              className="bg-white rounded-3xl shadow-lg p-6"
+              onClick={() => {
+                if (item.title === "Total Orders") {
+                  navigate("/customer/orders");
+                }
+              }}
+              className="bg-white rounded-3xl shadow-lg p-6 cursor-pointer hover:shadow-xl transition"
             >
 
               <div
@@ -122,13 +129,16 @@ export default function CustomerDashboard() {
                 Recent Orders
               </h2>
 
-              <button className="flex items-center gap-2 text-[#4B2E20] font-semibold">
+              <button
+                onClick={() => navigate("/customer/orders")}
+                className="flex items-center gap-2 text-[#4B2E20] font-semibold hover:text-[#8B5E3C]"
+              >
                 View All
                 <ArrowRight size={18} />
               </button>
 
             </div>
-                        <div className="space-y-5">
+            <div className="space-y-5">
 
               {orders.map((order) => (
 
@@ -156,13 +166,12 @@ export default function CustomerDashboard() {
                     </p>
 
                     <span
-                      className={`inline-block mt-2 px-4 py-1 rounded-full text-sm ${
-                        order.status === "Delivered"
-                          ? "bg-green-100 text-green-700"
-                          : order.status === "Shipped"
+                      className={`inline-block mt-2 px-4 py-1 rounded-full text-sm ${order.status === "Delivered"
+                        ? "bg-green-100 text-green-700"
+                        : order.status === "Shipped"
                           ? "bg-blue-100 text-blue-700"
                           : "bg-yellow-100 text-yellow-700"
-                      }`}
+                        }`}
                     >
                       {order.status}
                     </span>
@@ -268,7 +277,10 @@ export default function CustomerDashboard() {
                   Shop Now
                 </button>
 
-                <button className="w-full flex items-center gap-3 bg-[#FFF8F2] hover:bg-[#F4ECE3] rounded-xl p-4 transition">
+                <button
+                  onClick={() => navigate("/customer/orders")}
+                  className="w-full flex items-center gap-3 bg-[#FFF8F2] hover:bg-[#F4ECE3] rounded-xl p-4 transition"
+                >
                   <Package />
                   Track Orders
                 </button>

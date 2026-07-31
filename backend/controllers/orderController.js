@@ -21,20 +21,18 @@ exports.placeOrder = async (req, res) => {
       shippingCharge = 0,
       discount = 0,
       paymentMethod,
+      paymentId = "",
+      transactionId = "",
     } = req.body;
 
-    // Basic validation
+    // ==========================
+    // VALIDATION
+    // ==========================
+
     if (!items || items.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Order must contain at least one product",
-      });
-    }
-
-    if (!totalPrice) {
-      return res.status(400).json({
-        success: false,
-        message: "Total price is required",
       });
     }
 
@@ -45,62 +43,111 @@ exports.placeOrder = async (req, res) => {
       });
     }
 
+    if (!totalPrice || totalPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order amount",
+      });
+    }
+
+    // ==========================
+    // INVOICE NUMBER
+    // ==========================
+
     const invoiceNumber =
-  "AC-" +
-  Date.now() +
-  "-" +
-  Math.floor(Math.random() * 1000);
+      "AC-" +
+      Date.now() +
+      "-" +
+      Math.floor(Math.random() * 1000);
 
-const estimatedDelivery = new Date();
+    // ==========================
+    // ESTIMATED DELIVERY
+    // ==========================
 
-estimatedDelivery.setDate(
-  estimatedDelivery.getDate() + 5
-);
+    const estimatedDelivery = new Date();
+    estimatedDelivery.setDate(
+      estimatedDelivery.getDate() + 5
+    );
 
-const order = await Order.create({
-  customer: req.user._id,
+    // ==========================
+    // PLATFORM COMMISSION (5%)
+    // ==========================
 
-  items,
+    const platformFee = Number(
+      (totalPrice * 0.05).toFixed(2)
+    );
 
-  shippingAddress,
+    // ==========================
+    // SELLER PAYOUT (95%)
+    // ==========================
 
-  totalPrice,
+    const sellerPayout = Number(
+      (totalPrice - platformFee).toFixed(2)
+    );
 
-  shippingCharge,
+    // ==========================
+    // CREATE ORDER
+    // ==========================
 
-  discount,
+    const order = await Order.create({
+      customer: req.user._id,
 
-  paymentMethod:
-    paymentMethod === "Online"
-      ? "Online"
-      : "COD",
+      items: items,
 
-  paymentStatus:
-    paymentMethod === "COD"
-      ? "Pending"
-      : "Paid",
+      shippingAddress: shippingAddress,
 
-  orderStatus: "Pending",
+      totalPrice: totalPrice,
 
-  invoiceNumber,
+      shippingCharge: shippingCharge,
 
-  estimatedDelivery,
-});
+      discount: discount,
+
+      paymentMethod:
+        paymentMethod === "Online"
+          ? "Online"
+          : "COD",
+
+      paymentStatus:
+        paymentMethod === "Online"
+          ? "Paid"
+          : "Pending",
+
+      paymentId: paymentId,
+
+      transactionId: transactionId,
+
+      platformFee: platformFee,
+
+      sellerPayout: sellerPayout,
+
+      orderStatus: "Pending",
+
+      invoiceNumber: invoiceNumber,
+
+      estimatedDelivery: estimatedDelivery,
+    });
+
+    // ==========================
+    // RESPONSE
+    // ==========================
+
     res.status(201).json({
       success: true,
       message: "Order placed successfully",
       order,
     });
+
   } catch (error) {
+
     console.error("Place Order Error:", error);
 
     res.status(500).json({
       success: false,
       message: error.message,
     });
+
   }
 };
-
 // =====================================
 // CREATE RAZORPAY ORDER
 // =====================================
@@ -217,14 +264,14 @@ exports.getMyOrders = async (req, res) => {
 exports.getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
-  .populate("customer", "name email")
-  .populate({
-    path: "items.product",
-    populate: {
-      path: "seller",
-      select: "name email phone",
-    },
-  });
+      .populate("customer", "name email")
+      .populate({
+        path: "items.product",
+        populate: {
+          path: "seller",
+          select: "name email phone",
+        },
+      });
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -236,7 +283,7 @@ exports.getOrderById = async (req, res) => {
     if (
       order.customer?._id &&
       order.customer._id.toString() !==
-        req.user._id.toString() &&
+      req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
       return res.status(403).json({
@@ -428,7 +475,7 @@ exports.getSellerSalesHistory = async (req, res) => {
 
     const orders = await Order.find({
       "items.seller": req.user._id,
-      
+
     })
       .populate("customer", "name email")
       .populate("items.product", "name");

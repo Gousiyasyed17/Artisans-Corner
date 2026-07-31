@@ -105,10 +105,16 @@ exports.getProducts = async (req, res) => {
 exports.getOrders = async (req, res) => {
   try {
 
-    const orders = await Order.find()
-      .populate("customer", "name email")
-      .populate("items.product");
-
+   const orders = await Order.find()
+  .populate("customer", "name email")
+  .populate({
+    path: "items.product",
+    populate: {
+      path: "seller",
+      select: "name",
+    },
+  })
+  .sort({ createdAt: -1 });
     res.json({
       success: true,
       orders,

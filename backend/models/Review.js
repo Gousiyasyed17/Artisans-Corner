@@ -24,7 +24,6 @@ const reviewSchema = new mongoose.Schema(
     comment: {
       type: String,
       required: true,
-      trim: true,
     },
 
     images: [
@@ -32,11 +31,6 @@ const reviewSchema = new mongoose.Schema(
         type: String,
       },
     ],
-
-    sellerReply: {
-      type: String,
-      default: "",
-    },
   },
   {
     timestamps: true,
