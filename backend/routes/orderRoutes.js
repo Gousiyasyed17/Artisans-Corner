@@ -3,6 +3,8 @@ const router = express.Router();
 
 const {
   placeOrder,
+  createRazorpayOrder,
+  verifyPayment,
   getMyOrders,
   getOrderById,
   cancelOrder,
@@ -17,6 +19,22 @@ const { protect } = require("../middleware/authMiddleware");
 
 // Place Order
 router.post("/", protect, placeOrder);
+
+// =====================================
+// Razorpay
+// =====================================
+
+router.post(
+  "/create-razorpay-order",
+  protect,
+  createRazorpayOrder
+);
+
+router.post(
+  "/verify-payment",
+  protect,
+  verifyPayment
+);
 
 // Customer Orders
 router.get("/my-orders", protect, getMyOrders);

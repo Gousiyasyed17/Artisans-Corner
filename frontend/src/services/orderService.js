@@ -6,6 +6,35 @@ export const placeOrder = async (orderData) => {
   return data;
 };
 
+// ======================================
+// CREATE RAZORPAY ORDER
+// ======================================
+
+export const createRazorpayOrder = async (amount) => {
+  const { data } = await API.post(
+    "/orders/create-razorpay-order",
+    {
+      amount,
+    }
+  );
+
+  return data;
+};
+
+// ======================================
+// VERIFY PAYMENT
+// ======================================
+
+export const verifyPayment = async (
+  paymentData
+) => {
+  const { data } = await API.post(
+    "/orders/verify-payment",
+    paymentData
+  );
+
+  return data;
+};
 // Get My Orders
 export const getMyOrders = async () => {
   const { data } = await API.get("/orders/my-orders");

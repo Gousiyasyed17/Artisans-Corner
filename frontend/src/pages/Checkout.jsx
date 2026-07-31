@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCart } from "../services/cartService";
-import { placeOrder } from "../services/orderService";
+import {
+  placeOrder,
+  createRazorpayOrder,
+  verifyPayment,
+} from "../services/orderService";
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -126,76 +130,209 @@ export default function Checkout() {
     return true;
   };
 
-  // ==============================
-  // PLACE ORDER
-  // ==============================
+  const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+
+    script.onload = () => resolve(true);
+
+    script.onerror = () => resolve(false);
+
+    document.body.appendChild(script);
+  });
+};
 
   const handlePlaceOrder = async () => {
-    if (!validateForm()) {
-      return;
-    }
+  if (!validateForm()) return;
 
-    try {
-      setPlacingOrder(true);
+  try {
+    setPlacingOrder(true);
 
-      const items = cartItems.map((item) => ({
-        product: item.product._id,
+    const items = cartItems.map((item) => ({
+      product: item.product._id,
+      seller:
+        item.product.seller?._id ||
+        item.product.seller,
+      quantity: item.quantity,
+      price: item.product.price,
+    }));
 
-        seller:
-          item.product.seller?._id ||
-          item.product.seller,
+    const backendPaymentMethod =
+      paymentMethod === "COD"
+        ? "COD"
+        : "Online";
 
-        quantity: item.quantity,
+    const orderData = {
+      items,
 
-        price: item.product.price,
-      }));
+      shippingAddress: {
+        fullName: shippingAddress.fullName,
+        phone: shippingAddress.phone,
+        email: shippingAddress.email,
+        address: shippingAddress.address,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        pincode: shippingAddress.pincode,
+        country: shippingAddress.country,
+      },
 
-      // Order model accepts COD or Online
-      const backendPaymentMethod =
-        paymentMethod === "COD"
-          ? "COD"
-          : "Online";
+      totalPrice,
+      shippingCharge,
+      discount,
 
-      const orderData = {
-        items,
+      paymentMethod:
+        backendPaymentMethod,
+    };
 
-        shippingAddress: {
-          fullName: shippingAddress.fullName,
-          phone: shippingAddress.phone,
-          address: shippingAddress.address,
-          city: shippingAddress.city,
-          state: shippingAddress.state,
-          pincode: shippingAddress.pincode,
-          country: shippingAddress.country,
-        },
+    // ===========================
+    // CASH ON DELIVERY
+    // ===========================
 
-        totalPrice,
-        shippingCharge,
-        discount,
+    if (paymentMethod === "COD") {
 
-        paymentMethod: backendPaymentMethod,
-      };
-
-      const result = await placeOrder(orderData);
+      await placeOrder(orderData);
 
       alert("Order Placed Successfully!");
 
-      console.log("Order:", result);
-
       navigate("/customer/orders");
-    } catch (error) {
-      console.error("Place Order Error:", error);
-      console.error(error.response);
+
+      return;
+    }
+
+    // ===========================
+    // LOAD RAZORPAY SDK
+    // ===========================
+
+    const loaded =
+      await loadRazorpayScript();
+
+    if (!loaded) {
 
       alert(
-        error.response?.data?.message ||
-          "Failed to place order"
+        "Failed to load Razorpay."
       );
-    } finally {
-      setPlacingOrder(false);
-    }
-  };
 
+      return;
+
+    }
+
+    // ===========================
+    // CREATE ORDER
+    // ===========================
+
+    const razorpayOrder =
+      await createRazorpayOrder(
+        totalPrice
+      );
+
+    const options = {
+
+      key:
+        import.meta.env
+          .VITE_RAZORPAY_KEY_ID,
+
+      amount:
+        razorpayOrder.order.amount,
+
+      currency:
+        razorpayOrder.order.currency,
+
+      name: "Artisans Corner",
+
+      description:
+        "Order Payment",
+
+      order_id:
+        razorpayOrder.order.id,
+
+      handler: async (
+        response
+      ) => {
+                try {
+
+          await verifyPayment({
+            razorpay_order_id:
+              response.razorpay_order_id,
+
+            razorpay_payment_id:
+              response.razorpay_payment_id,
+
+            razorpay_signature:
+              response.razorpay_signature,
+          });
+
+          const result =
+            await placeOrder(orderData);
+
+          console.log(
+            "Order:",
+            result
+          );
+
+          alert(
+            "Payment Successful!\nOrder Placed Successfully!"
+          );
+
+          navigate(
+            "/customer/orders"
+          );
+
+        } catch (error) {
+
+          console.error(error);
+
+          alert(
+            error.response?.data
+              ?.message ||
+              "Payment verification failed"
+          );
+
+        }
+
+      },
+
+      theme: {
+        color: "#4B2E20",
+      },
+
+      modal: {
+        ondismiss: () => {
+
+          alert(
+            "Payment Cancelled"
+          );
+
+        },
+      },
+
+    };
+
+    const paymentObject =
+      new window.Razorpay(
+        options
+      );
+
+    paymentObject.open();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      error.response?.data
+        ?.message ||
+        "Payment Failed"
+    );
+
+  } finally {
+
+    setPlacingOrder(false);
+
+  }
+
+};
   // ==============================
   // LOADING
   // ==============================
