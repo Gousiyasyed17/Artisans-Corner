@@ -18,6 +18,7 @@ const customerRoutes = require("./routes/customerRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const invoiceRoutes = require("./routes/invoiceRoutes");
+const couponRoutes = require("./routes/couponRoutes");
 
 // Connect Database
 connectDB();
@@ -41,6 +42,7 @@ app.use("/api/seller", sellerRoutes);
 app.use("/api/customer", customerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/coupons", couponRoutes);
 
 // Homepage Route
 app.get("/", (req, res) => {

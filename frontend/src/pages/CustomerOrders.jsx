@@ -8,6 +8,7 @@ import {
   Eye,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import API from "../services/api";
 import { getMyOrders } from "../services/orderService";
 
 export default function CustomerOrders() {
@@ -80,7 +81,7 @@ export default function CustomerOrders() {
         return "bg-gray-100";
     }
   };
-    if (loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#FFF8F2] flex items-center justify-center">
         <h1 className="text-3xl font-bold text-[#4B2E20]">
@@ -89,6 +90,70 @@ export default function CustomerOrders() {
       </div>
     );
   }
+  const downloadInvoice = async (orderId) => {
+    try {
+      const response = await API.get(
+        `/invoice/${orderId}`,
+        {
+          responseType: "blob",
+        }
+      );
+
+      const url = window.URL.createObjectURL(
+        new Blob([response.data])
+      );
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.download = `Invoice-${orderId}.pdf`;
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert("Failed to download invoice");
+
+    }
+  };
+  const cancelOrder = async (orderId) => {
+    try {
+      await API.put(`/orders/${orderId}/cancel`);
+
+      alert("Order cancelled successfully");
+
+      loadOrders();
+    } catch (error) {
+      console.log(error);
+
+      alert(
+        error.response?.data?.message ||
+        "Failed to cancel order"
+      );
+    }
+  };
+  const returnOrder = async (id) => {
+    try {
+      await API.put(`/orders/${id}/return`);
+
+      alert("Return request submitted");
+
+      loadOrders();
+
+    } catch (error) {
+      alert(
+        error.response?.data?.message ||
+        "Failed"
+      );
+    }
+  };
 
   if (filteredOrders.length === 0) {
     return (
@@ -245,7 +310,7 @@ export default function CustomerOrders() {
                         ₹{item.price}
 
                       </p>
-                                            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mt-6">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mt-6">
 
                         <div className="flex items-center gap-3">
 
@@ -286,8 +351,8 @@ export default function CustomerOrders() {
                             <p className="font-semibold">
                               {order.estimatedDelivery
                                 ? new Date(
-                                    order.estimatedDelivery
-                                  ).toLocaleDateString()
+                                  order.estimatedDelivery
+                                ).toLocaleDateString()
                                 : "5-7 Days"}
                             </p>
 
@@ -339,18 +404,26 @@ export default function CustomerOrders() {
                           <Eye size={18} />
                           View Details
                         </Link>
+                        <button
+                          onClick={() => downloadInvoice(order._id)}
+                          className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700"
+                        >
+                          Download Invoice
+                        </button>
 
                         {(order.orderStatus === "Pending" ||
                           order.orderStatus === "Confirmed") && (
-                          <button
-                            className="bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700"
-                          >
-                            Cancel Order
-                          </button>
-                        )}
+                            <button
+                              onClick={() => cancelOrder(order._id)}
+                              className="bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700"
+                            >
+                              Cancel Order
+                            </button>
+                          )}
 
                         {order.orderStatus === "Delivered" && (
                           <button
+                            onClick={() => returnOrder(order._id)}
                             className="bg-yellow-600 text-white px-6 py-3 rounded-xl hover:bg-yellow-700"
                           >
                             Return Order

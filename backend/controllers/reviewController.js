@@ -1,10 +1,43 @@
 const Review = require("../models/Review");
 const Product = require("../models/Product");
+const Order = require("../models/order");
 
 // Add Review
 exports.addReview = async (req, res) => {
   try {
     const { productId, rating, comment } = req.body;
+    // ===============================
+// Check if customer purchased product
+// ===============================
+
+const purchased = await Order.findOne({
+  customer: req.user._id,
+  "items.product": productId,
+  orderStatus: "Delivered",
+});
+
+if (!purchased) {
+  return res.status(400).json({
+    success: false,
+    message: "You can review only purchased products",
+  });
+}
+
+// ===============================
+// Prevent duplicate review
+// ===============================
+
+const alreadyReviewed = await Review.findOne({
+  product: productId,
+  user: req.user._id,
+});
+
+if (alreadyReviewed) {
+  return res.status(400).json({
+    success: false,
+    message: "You have already reviewed this product",
+  });
+}
 
     const review = await Review.create({
       product: productId,

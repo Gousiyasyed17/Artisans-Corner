@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCart } from "../services/cartService";
+import API from "../services/api";
 import {
   placeOrder,
   createRazorpayOrder,
@@ -9,6 +10,9 @@ import {
 
 export default function Checkout() {
   const navigate = useNavigate();
+
+  const [coupon, setCoupon] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
 
   const [cartItems, setCartItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -46,7 +50,7 @@ export default function Checkout() {
 
       alert(
         error.response?.data?.message ||
-          "Failed to load cart"
+        "Failed to load cart"
       );
     } finally {
       setLoading(false);
@@ -66,6 +70,7 @@ export default function Checkout() {
     }));
   };
 
+
   // ==============================
   // PRICE CALCULATIONS
   // ==============================
@@ -74,19 +79,16 @@ export default function Checkout() {
     (total, item) =>
       total +
       Number(item.product?.price || 0) *
-        Number(item.quantity || 0),
+      Number(item.quantity || 0),
     0
   );
 
   const shippingCharge = 0;
 
-  const discount = 0;
-
   const gst = Math.round(subtotal * 0.18);
 
   const totalPrice =
-    subtotal + shippingCharge + gst - discount;
-
+    subtotal + shippingCharge + gst - couponDiscount;
   // ==============================
   // VALIDATE ADDRESS
   // ==============================
@@ -131,208 +133,225 @@ export default function Checkout() {
   };
 
   const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    const script = document.createElement("script");
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
 
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
 
-    script.onload = () => resolve(true);
+      script.onload = () => resolve(true);
 
-    script.onerror = () => resolve(false);
+      script.onerror = () => resolve(false);
 
-    document.body.appendChild(script);
-  });
-};
+      document.body.appendChild(script);
+    });
+  };
+  const applyCoupon = async () => {
+    try {
+      const { data } = await API.post("/coupons/apply", {
+        code: coupon,
+        total: subtotal,
+      });
+
+      setCouponDiscount(data.discount);
+      alert("Coupon Applied Successfully");
+    } catch (err) {
+      alert(err.response?.data?.message || "Invalid Coupon");
+    }
+  };
 
   const handlePlaceOrder = async () => {
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  try {
-    setPlacingOrder(true);
+    try {
+      setPlacingOrder(true);
 
-    const items = cartItems.map((item) => ({
-      product: item.product._id,
-      seller:
-        item.product.seller?._id ||
-        item.product.seller,
-      quantity: item.quantity,
-      price: item.product.price,
-    }));
+      const items = cartItems.map((item) => ({
+        product: item.product._id,
+        seller:
+          item.product.seller?._id ||
+          item.product.seller,
+        quantity: item.quantity,
+        price: item.product.price,
+      }));
 
-    const backendPaymentMethod =
-      paymentMethod === "COD"
-        ? "COD"
-        : "Online";
+      const backendPaymentMethod =
+        paymentMethod === "COD"
+          ? "COD"
+          : "Online";
 
-    const orderData = {
-      items,
+      const orderData = {
+        items,
 
-      shippingAddress: {
-        fullName: shippingAddress.fullName,
-        phone: shippingAddress.phone,
-        email: shippingAddress.email,
-        address: shippingAddress.address,
-        city: shippingAddress.city,
-        state: shippingAddress.state,
-        pincode: shippingAddress.pincode,
-        country: shippingAddress.country,
-      },
+        shippingAddress: {
+          fullName: shippingAddress.fullName,
+          phone: shippingAddress.phone,
+          email: shippingAddress.email,
+          address: shippingAddress.address,
+          city: shippingAddress.city,
+          state: shippingAddress.state,
+          pincode: shippingAddress.pincode,
+          country: shippingAddress.country,
+        },
 
-      totalPrice,
-      shippingCharge,
-      discount,
+        totalPrice,
+        shippingCharge,
+        discount: couponDiscount,
 
-      paymentMethod:
-        backendPaymentMethod,
-    };
+        paymentMethod:
+          backendPaymentMethod,
+      };
 
-    // ===========================
-    // CASH ON DELIVERY
-    // ===========================
+      // ===========================
+      // CASH ON DELIVERY
+      // ===========================
 
-    if (paymentMethod === "COD") {
+      if (paymentMethod === "COD") {
 
-      await placeOrder(orderData);
+        await placeOrder(orderData);
 
-      alert("Order Placed Successfully!");
+        alert("Order Placed Successfully!");
 
-      navigate("/customer/orders");
+        navigate("/customer/orders");
 
-      return;
-    }
+        return;
+      }
 
-    // ===========================
-    // LOAD RAZORPAY SDK
-    // ===========================
+      // ===========================
+      // LOAD RAZORPAY SDK
+      // ===========================
 
-    const loaded =
-      await loadRazorpayScript();
+      const loaded =
+        await loadRazorpayScript();
 
-    if (!loaded) {
+      if (!loaded) {
 
-      alert(
-        "Failed to load Razorpay."
+        alert(
+          "Failed to load Razorpay."
+        );
+
+        return;
+
+      }
+
+      // ===========================
+      // CREATE ORDER
+      // ===========================
+
+      const razorpayOrder =
+        await createRazorpayOrder(
+          totalPrice
+        );
+      console.log(
+        "Razorpay Key:",
+        import.meta.env.VITE_RAZORPAY_KEY_ID
       );
 
-      return;
+      const options = {
 
-    }
+        key:
+          import.meta.env
+            .VITE_RAZORPAY_KEY_ID,
 
-    // ===========================
-    // CREATE ORDER
-    // ===========================
+        amount:
+          razorpayOrder.order.amount,
 
-    const razorpayOrder =
-      await createRazorpayOrder(
-        totalPrice
-      );
+        currency:
+          razorpayOrder.order.currency,
 
-    const options = {
+        name: "Artisans Corner",
 
-      key:
-        import.meta.env
-          .VITE_RAZORPAY_KEY_ID,
+        description:
+          "Order Payment",
 
-      amount:
-        razorpayOrder.order.amount,
+        order_id:
+          razorpayOrder.order.id,
 
-      currency:
-        razorpayOrder.order.currency,
+        handler: async (
+          response
+        ) => {
+          try {
 
-      name: "Artisans Corner",
+            await verifyPayment({
+              razorpay_order_id:
+                response.razorpay_order_id,
 
-      description:
-        "Order Payment",
+              razorpay_payment_id:
+                response.razorpay_payment_id,
 
-      order_id:
-        razorpayOrder.order.id,
+              razorpay_signature:
+                response.razorpay_signature,
+            });
 
-      handler: async (
-        response
-      ) => {
-                try {
+            const result =
+              await placeOrder(orderData);
 
-          await verifyPayment({
-            razorpay_order_id:
-              response.razorpay_order_id,
+            console.log(
+              "Order:",
+              result
+            );
 
-            razorpay_payment_id:
-              response.razorpay_payment_id,
+            alert(
+              "Payment Successful!\nOrder Placed Successfully!"
+            );
 
-            razorpay_signature:
-              response.razorpay_signature,
-          });
+            navigate(
+              "/customer/orders"
+            );
 
-          const result =
-            await placeOrder(orderData);
+          } catch (error) {
 
-          console.log(
-            "Order:",
-            result
-          );
+            console.error(error);
 
-          alert(
-            "Payment Successful!\nOrder Placed Successfully!"
-          );
-
-          navigate(
-            "/customer/orders"
-          );
-
-        } catch (error) {
-
-          console.error(error);
-
-          alert(
-            error.response?.data
-              ?.message ||
+            alert(
+              error.response?.data
+                ?.message ||
               "Payment verification failed"
-          );
+            );
 
-        }
-
-      },
-
-      theme: {
-        color: "#4B2E20",
-      },
-
-      modal: {
-        ondismiss: () => {
-
-          alert(
-            "Payment Cancelled"
-          );
+          }
 
         },
-      },
 
-    };
+        theme: {
+          color: "#4B2E20",
+        },
 
-    const paymentObject =
-      new window.Razorpay(
-        options
+        modal: {
+          ondismiss: () => {
+
+            alert(
+              "Payment Cancelled"
+            );
+
+          },
+        },
+
+      };
+
+      const paymentObject =
+        new window.Razorpay(
+          options
+        );
+
+      paymentObject.open();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        error.response?.data
+          ?.message ||
+        "Payment Failed"
       );
 
-    paymentObject.open();
+    } finally {
 
-  } catch (error) {
+      setPlacingOrder(false);
 
-    console.error(error);
+    }
 
-    alert(
-      error.response?.data
-        ?.message ||
-        "Payment Failed"
-    );
-
-  } finally {
-
-    setPlacingOrder(false);
-
-  }
-
-};
+  };
   // ==============================
   // LOADING
   // ==============================
@@ -636,6 +655,22 @@ export default function Checkout() {
                 ))}
 
               </div>
+              <div className="mt-4">
+                <input
+                  type="text"
+                  placeholder="Enter Coupon"
+                  value={coupon}
+                  onChange={(e) => setCoupon(e.target.value)}
+                  className="border p-3 rounded-lg w-full"
+                />
+
+                <button
+                  onClick={applyCoupon}
+                  className="mt-2 bg-green-600 text-white px-5 py-2 rounded-lg"
+                >
+                  Apply Coupon
+                </button>
+              </div>
 
               {/* PRICE DETAILS */}
 
@@ -661,7 +696,7 @@ export default function Checkout() {
                   <span>Discount</span>
 
                   <span className="text-green-600">
-                    ₹{discount.toLocaleString("en-IN")}
+                    ₹{couponDiscount.toLocaleString("en-IN")}
                   </span>
                 </div>
 
@@ -712,8 +747,8 @@ export default function Checkout() {
                 {placingOrder
                   ? "Placing Order..."
                   : paymentMethod === "COD"
-                  ? "Place Order"
-                  : "Continue to Payment"}
+                    ? "Place Order"
+                    : "Continue to Payment"}
               </button>
 
               <div className="mt-6 text-sm text-gray-500 space-y-2">

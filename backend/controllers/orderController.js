@@ -26,7 +26,7 @@ exports.placeOrder = async (req, res) => {
     } = req.body;
 
     // ==========================
-    // VALIDATION
+    // Validation
     // ==========================
 
     if (!items || items.length === 0) {
@@ -51,7 +51,20 @@ exports.placeOrder = async (req, res) => {
     }
 
     // ==========================
-    // INVOICE NUMBER
+    // Platform Fee (10%)
+    // ==========================
+const platformFee = Number((totalPrice * 0.05).toFixed(2));
+
+    // ==========================
+    // Seller Payout
+    // ==========================
+
+    const sellerPayout = Number(
+      (totalPrice - platformFee).toFixed(2)
+    );
+
+    // ==========================
+    // Invoice Number
     // ==========================
 
     const invoiceNumber =
@@ -61,46 +74,31 @@ exports.placeOrder = async (req, res) => {
       Math.floor(Math.random() * 1000);
 
     // ==========================
-    // ESTIMATED DELIVERY
+    // Estimated Delivery
     // ==========================
 
     const estimatedDelivery = new Date();
+
     estimatedDelivery.setDate(
       estimatedDelivery.getDate() + 5
     );
 
     // ==========================
-    // PLATFORM COMMISSION (5%)
-    // ==========================
-
-    const platformFee = Number(
-      (totalPrice * 0.05).toFixed(2)
-    );
-
-    // ==========================
-    // SELLER PAYOUT (95%)
-    // ==========================
-
-    const sellerPayout = Number(
-      (totalPrice - platformFee).toFixed(2)
-    );
-
-    // ==========================
-    // CREATE ORDER
+    // Create Order
     // ==========================
 
     const order = await Order.create({
       customer: req.user._id,
 
-      items: items,
+      items,
 
-      shippingAddress: shippingAddress,
+      shippingAddress,
 
-      totalPrice: totalPrice,
+      totalPrice,
 
-      shippingCharge: shippingCharge,
+      shippingCharge,
 
-      discount: discount,
+      discount,
 
       paymentMethod:
         paymentMethod === "Online"
@@ -112,23 +110,23 @@ exports.placeOrder = async (req, res) => {
           ? "Paid"
           : "Pending",
 
-      paymentId: paymentId,
+      paymentId,
 
-      transactionId: transactionId,
+      transactionId,
 
-      platformFee: platformFee,
+      platformFee,
 
-      sellerPayout: sellerPayout,
+      sellerPayout,
+
+      invoiceNumber,
+
+      estimatedDelivery,
 
       orderStatus: "Pending",
-
-      invoiceNumber: invoiceNumber,
-
-      estimatedDelivery: estimatedDelivery,
     });
 
     // ==========================
-    // RESPONSE
+    // Response
     // ==========================
 
     res.status(201).json({
@@ -138,14 +136,12 @@ exports.placeOrder = async (req, res) => {
     });
 
   } catch (error) {
-
     console.error("Place Order Error:", error);
 
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 // =====================================
@@ -618,5 +614,50 @@ exports.getSellerEarnings = async (req, res) => {
       message: error.message,
     });
 
+  }
+};
+
+exports.requestReturn = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.customer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+
+    if (order.orderStatus !== "Delivered") {
+      return res.status(400).json({
+        success: false,
+        message: "Only delivered orders can be returned",
+      });
+    }
+
+    order.returnRequested = true;
+    order.returnStatus = "Pending";
+    order.returnedAt = new Date();
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Return request submitted",
+      order,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

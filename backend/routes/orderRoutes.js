@@ -8,6 +8,7 @@ const {
   getMyOrders,
   getOrderById,
   cancelOrder,
+  requestReturn,
   updateOrderStatus,
   getAllOrders,
   getSellerOrders,
@@ -60,6 +61,7 @@ router.get("/:id", protect, getOrderById);
 
 // Cancel Order
 router.put("/:id/cancel", protect, cancelOrder);
+router.put("/:id/return", protect, requestReturn);
 
 // Update Order Status
 router.put("/:id", protect, updateOrderStatus);

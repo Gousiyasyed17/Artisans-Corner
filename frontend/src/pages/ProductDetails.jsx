@@ -4,6 +4,10 @@ import { getProductById } from "../services/productService";
 import { addToCart } from "../services/cartService";
 import { addToWishlist } from "../services/wishlistService";
 import {
+  getReviews,
+  addReview,
+} from "../services/reviewService";
+import {
   Heart,
   Share2,
   Star,
@@ -14,88 +18,142 @@ import {
   RotateCcw,
 } from "lucide-react";
 export default function ProductDetails() {
+  const handleShare = async () => {
+  const productUrl =
+  "https://artisans-corner.vercel.app/product/" + product._id;
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: product.name,
+        text: `Check out ${product.name} on Artisan Corner`,
+        url: productUrl,
+      });
+    } else {
+      window.open(
+        `https://wa.me/?text=${encodeURIComponent(productUrl)}`,
+        "_blank"
+      );
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   const [selectedImage, setSelectedImage] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [reviews, setReviews] = useState([]);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
   const handleAddToCart = async () => {
-  try {
-    await addToCart(product._id, quantity);
-
-    alert("Product Added To Cart");
-  } catch (error) {
-  console.log(error);
-  console.log(error.response);
-
-  alert(error.response?.data?.message || error.message);
-}
-};
-const handleBuyNow = async () => {
-  try {
-    await addToCart(product._id, quantity);
-    navigate("/checkout");
-  } catch (error) {
-    console.log("Buy Now Error:", error);
-
-    alert(
-      error.response?.data?.message ||
-      "Failed to continue with Buy Now"
-    );
-  }
-};
-const handleAddToWishlist = async () => {
-  try {
-    await addToWishlist(product._id);
-
-    alert("Product Added To Wishlist");
-  } catch (error) {
-    console.log("Wishlist Error:", error);
-    console.log(error.response);
-
-    alert(
-      error.response?.data?.message ||
-        "Failed to add product to wishlist"
-    );
-  }
-};
-  useEffect(() => {
-  const fetchProduct = async () => {
     try {
-      const data = await getProductById(id);
+      await addToCart(product._id, quantity);
 
-      setProduct(data);
+      alert("Product Added To Cart");
+    } catch (error) {
+      console.log(error);
+      console.log(error.response);
 
-      if (data.images && data.images.length > 0) {
-        setSelectedImage(data.images[0]);
-      }
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setLoading(false);
+      alert(error.response?.data?.message || error.message);
     }
   };
+  const handleBuyNow = async () => {
+    try {
+      await addToCart(product._id, quantity);
+      navigate("/checkout");
+    } catch (error) {
+      console.log("Buy Now Error:", error);
 
-  fetchProduct();
-}, [id]);
-if (loading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      Loading...
-    </div>
-  );
-}
+      alert(
+        error.response?.data?.message ||
+        "Failed to continue with Buy Now"
+      );
+    }
+  };
+  const handleAddToWishlist = async () => {
+    try {
+      await addToWishlist(product._id);
 
-if (!product) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      Product Not Found
-    </div>
-  );
-}
+      alert("Product Added To Wishlist");
+    } catch (error) {
+      console.log("Wishlist Error:", error);
+      console.log(error.response);
+
+      alert(
+        error.response?.data?.message ||
+        "Failed to add product to wishlist"
+      );
+    }
+  };
+  const submitReview = async () => {
+    try {
+      await addReview({
+        productId: product._id,
+        rating,
+        comment,
+      });
+
+      alert("Review Added Successfully");
+
+      const reviewData = await getReviews(product._id);
+
+      setReviews(reviewData);
+
+      setRating(5);
+
+      setComment("");
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert(
+        error.response?.data?.message ||
+        "Failed to add review"
+      );
+
+    }
+  };
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const data = await getProductById(id);
+
+        setProduct(data);
+        const reviewData = await getReviews(id);
+        setReviews(reviewData);
+
+        if (data.images && data.images.length > 0) {
+          setSelectedImage(data.images[0]);
+        }
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Product Not Found
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FFF8F2] py-10 px-6">
@@ -125,11 +183,10 @@ if (!product) {
               <button
                 key={index}
                 onClick={() => setSelectedImage(image)}
-                className={`rounded-2xl overflow-hidden border-2 ${
-                  selectedImage === image
-                    ? "border-[#4B2E20]"
-                    : "border-transparent"
-                }`}
+                className={`rounded-2xl overflow-hidden border-2 ${selectedImage === image
+                  ? "border-[#4B2E20]"
+                  : "border-transparent"
+                  }`}
               >
 
                 <img
@@ -174,7 +231,7 @@ if (!product) {
 
             <div className="flex">
 
-              {[1,2,3,4,5].map((star)=>(
+              {[1, 2, 3, 4, 5].map((star) => (
 
                 <Star
                   key={star}
@@ -314,12 +371,12 @@ if (!product) {
               Wishlist
             </button>
 
-            <button className="border py-4 rounded-2xl flex justify-center items-center gap-3 hover:bg-white">
-
+            <button
+              onClick={handleShare}
+              className="border py-4 rounded-2xl flex justify-center items-center gap-3 hover:bg-white"
+            >
               <Share2 size={20} />
-
               Share
-
             </button>
 
           </div>
@@ -397,477 +454,475 @@ if (!product) {
           </div>
           {/* Seller Information */}
 
-<div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
+          <div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
 
-  <h2 className="text-2xl font-bold text-[#4B2E20] mb-6">
-    Seller Information
-  </h2>
+            <h2 className="text-2xl font-bold text-[#4B2E20] mb-6">
+              Seller Information
+            </h2>
 
-  <div className="flex flex-col md:flex-row justify-between gap-6">
+            <div className="flex flex-col md:flex-row justify-between gap-6">
 
-    <div className="flex items-center gap-5">
+              <div className="flex items-center gap-5">
 
-      <img
-        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300"
-        alt="Seller"
-        className="w-24 h-24 rounded-full object-cover border-4 border-[#4B2E20]"
-      />
+                <img
+                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300"
+                  alt="Seller"
+                  className="w-24 h-24 rounded-full object-cover border-4 border-[#4B2E20]"
+                />
 
-      <div>
+                <div>
 
-        <h3 className="text-xl font-bold">
-          {product.seller?.name}for 
-        </h3>
+                  <h3 className="text-xl font-bold">
+                    {product.seller?.name}for
+                  </h3>
 
-        <p className="text-gray-500 mt-1">
-          Verified Artisan
-        </p>
+                  <p className="text-gray-500 mt-1">
+                    Verified Artisan
+                  </p>
 
-        <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-2">
 
-          <Star
-            fill="#FFD700"
-            className="text-yellow-400"
-            size={18}
-          />
+                    <Star
+                      fill="#FFD700"
+                      className="text-yellow-400"
+                      size={18}
+                    />
 
-          <span>4.9 Seller Rating</span>
+                    <span>4.9 Seller Rating</span>
 
-        </div>
+                  </div>
 
-        <p className="text-sm text-gray-500 mt-2">
-          1,248 Products Sold
-        </p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    1,248 Products Sold
+                  </p>
 
-      </div>
+                </div>
 
-    </div>
+              </div>
 
-    <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3">
 
-      <button className="bg-[#4B2E20] text-white px-6 py-3 rounded-xl hover:bg-[#6B4226]">
-        Visit Store
-      </button>
+                <button className="bg-[#4B2E20] text-white px-6 py-3 rounded-xl hover:bg-[#6B4226]">
+                  Visit Store
+                </button>
 
-      <button className="border border-[#4B2E20] text-[#4B2E20] px-6 py-3 rounded-xl hover:bg-[#FFF8F2]">
-        Contact Seller
-      </button>
+                <button className="border border-[#4B2E20] text-[#4B2E20] px-6 py-3 rounded-xl hover:bg-[#FFF8F2]">
+                  Contact Seller
+                </button>
 
-    </div>
+              </div>
 
-  </div>
-
-</div>
-
-{/* Product Specifications */}
-
-<div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
-
-  <h2 className="text-2xl font-bold text-[#4B2E20] mb-6">
-    Specifications
-  </h2>
-
-  <div className="grid md:grid-cols-2 gap-5">
-
-    <div className="flex justify-between border-b pb-3">
-      <span className="font-semibold">Material</span>
-      <span>Ceramic</span>
-    </div>
-
-    <div className="flex justify-between border-b pb-3">
-      <span className="font-semibold">Color</span>
-      <span>Ivory White</span>
-    </div>
-
-    <div className="flex justify-between border-b pb-3">
-      <span className="font-semibold">Height</span>
-      <span>28 cm</span>
-    </div>
-
-    <div className="flex justify-between border-b pb-3">
-      <span className="font-semibold">Width</span>
-      <span>12 cm</span>
-    </div>
-
-    <div className="flex justify-between border-b pb-3">
-      <span className="font-semibold">Weight</span>
-      <span>1.3 kg</span>
-    </div>
-
-    <div className="flex justify-between border-b pb-3">
-      <span className="font-semibold">Origin</span>
-      <span>Jaipur, Rajasthan</span>
-    </div>
-
-  </div>
-
-</div>
-
-{/* Product Description */}
-
-<div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
-
-  <h2 className="text-2xl font-bold text-[#4B2E20] mb-5">
-    Product Description
-  </h2>
-
-  <p className="leading-8 text-gray-600">
-    {product.description}
-  </p>
-</div>
-
-{/* Product Features */}
-
-<div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
-
-  <h2 className="text-2xl font-bold text-[#4B2E20] mb-6">
-    Why You'll Love It
-  </h2>
-
-  <div className="grid md:grid-cols-2 gap-5">
-
-    <div className="bg-[#FFF8F2] rounded-xl p-5">
-      🌿 Eco-Friendly & Sustainable
-    </div>
-
-    <div className="bg-[#FFF8F2] rounded-xl p-5">
-      🎨 Handmade by Skilled Indian Artisans
-    </div>
-
-    <div className="bg-[#FFF8F2] rounded-xl p-5">
-      🎁 Perfect Gift for Every Occasion
-    </div>
-
-    <div className="bg-[#FFF8F2] rounded-xl p-5">
-      🏡 Elegant Home Decor Piece
-    </div>
-
-  </div>
-
-</div>
-
-{/* Care Instructions */}
-
-<div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
-
-  <h2 className="text-2xl font-bold text-[#4B2E20] mb-5">
-    Care Instructions
-  </h2>
-
-  <ul className="list-disc ml-6 space-y-3 text-gray-600">
-
-    <li>Clean gently using a soft dry cloth.</li>
-
-    <li>Avoid dropping or rough handling.</li>
-
-    <li>Keep away from harsh chemicals.</li>
-
-    <li>Indoor decorative use recommended.</li>
-
-    <li>Store in a dry place.</li>
-
-  </ul>
-
-</div>
-{/* Customer Reviews */}
-
-<div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
-
-  <div className="flex justify-between items-center">
-
-    <h2 className="text-2xl font-bold text-[#4B2E20]">
-      Customer Reviews
-    </h2>
-
-    <button className="bg-[#4B2E20] text-white px-5 py-2 rounded-xl hover:bg-[#6B4226]">
-      Write Review
-    </button>
-
-  </div>
-
-  {/* Overall Rating */}
-
-  <div className="flex items-center gap-5 mt-8">
-
-    <div className="text-center">
-
-      <h1 className="text-5xl font-bold text-[#4B2E20]">
-        4.9
-      </h1>
-
-      <div className="flex justify-center mt-2">
-
-        {[1,2,3,4,5].map((item)=>(
-
-          <Star
-            key={item}
-            fill="#FFD700"
-            className="text-yellow-400"
-          />
-
-        ))}
-
-      </div>
-
-      <p className="text-gray-500 mt-2">
-        Based on 248 Reviews
-      </p>
-
-    </div>
-
-    <div className="flex-1">
-
-      {[5,4,3,2,1].map((item)=>(
-
-        <div
-          key={item}
-          className="flex items-center gap-3 mb-3"
-        >
-
-          <span>{item}★</span>
-
-          <div className="w-full bg-gray-200 rounded-full h-3">
-
-            <div
-              className="bg-yellow-400 h-3 rounded-full"
-              style={{
-                width:
-                  item===5
-                    ? "82%"
-                    : item===4
-                    ? "12%"
-                    : item===3
-                    ? "4%"
-                    : item===2
-                    ? "1%"
-                    : "1%"
-              }}
-            ></div>
+            </div>
 
           </div>
 
-        </div>
+          {/* Product Specifications */}
 
-      ))}
+          <div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
 
-    </div>
+            <h2 className="text-2xl font-bold text-[#4B2E20] mb-6">
+              Specifications
+            </h2>
 
-  </div>
+            <div className="grid md:grid-cols-2 gap-5">
 
-</div>
-<div className="bg-white rounded-3xl shadow-lg p-6 mt-8">
+              <div className="flex justify-between border-b pb-3">
+                <span className="font-semibold">Material</span>
+                <span>Ceramic</span>
+              </div>
 
-  <div className="flex justify-between">
+              <div className="flex justify-between border-b pb-3">
+                <span className="font-semibold">Color</span>
+                <span>Ivory White</span>
+              </div>
 
-    <div className="flex gap-4">
+              <div className="flex justify-between border-b pb-3">
+                <span className="font-semibold">Height</span>
+                <span>28 cm</span>
+              </div>
 
-      <img
-        src="https://randomuser.me/api/portraits/women/44.jpg"
-        alt=""
-        className="w-14 h-14 rounded-full"
-      />
+              <div className="flex justify-between border-b pb-3">
+                <span className="font-semibold">Width</span>
+                <span>12 cm</span>
+              </div>
 
-      <div>
+              <div className="flex justify-between border-b pb-3">
+                <span className="font-semibold">Weight</span>
+                <span>1.3 kg</span>
+              </div>
 
-        <h3 className="font-bold">
-          Ananya Sharma
-        </h3>
+              <div className="flex justify-between border-b pb-3">
+                <span className="font-semibold">Origin</span>
+                <span>Jaipur, Rajasthan</span>
+              </div>
 
-        <div className="flex mt-1">
+            </div>
 
-          {[1,2,3,4,5].map((star)=>(
+          </div>
 
-            <Star
-              key={star}
-              fill="#FFD700"
-              className="text-yellow-400"
-              size={18}
-            />
+          {/* Product Description */}
+
+          <div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
+
+            <h2 className="text-2xl font-bold text-[#4B2E20] mb-5">
+              Product Description
+            </h2>
+
+            <p className="leading-8 text-gray-600">
+              {product.description}
+            </p>
+          </div>
+
+          {/* Product Features */}
+
+          <div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
+
+            <h2 className="text-2xl font-bold text-[#4B2E20] mb-6">
+              Why You'll Love It
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-5">
+
+              <div className="bg-[#FFF8F2] rounded-xl p-5">
+                🌿 Eco-Friendly & Sustainable
+              </div>
+
+              <div className="bg-[#FFF8F2] rounded-xl p-5">
+                🎨 Handmade by Skilled Indian Artisans
+              </div>
+
+              <div className="bg-[#FFF8F2] rounded-xl p-5">
+                🎁 Perfect Gift for Every Occasion
+              </div>
+
+              <div className="bg-[#FFF8F2] rounded-xl p-5">
+                🏡 Elegant Home Decor Piece
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Care Instructions */}
+
+          <div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
+
+            <h2 className="text-2xl font-bold text-[#4B2E20] mb-5">
+              Care Instructions
+            </h2>
+
+            <ul className="list-disc ml-6 space-y-3 text-gray-600">
+
+              <li>Clean gently using a soft dry cloth.</li>
+
+              <li>Avoid dropping or rough handling.</li>
+
+              <li>Keep away from harsh chemicals.</li>
+
+              <li>Indoor decorative use recommended.</li>
+
+              <li>Store in a dry place.</li>
+
+            </ul>
+
+          </div>
+          {/* Customer Reviews */}
+
+          <div className="bg-white rounded-3xl shadow-lg p-6 mt-10">
+
+            <div className="flex justify-between items-center">
+
+              <h2 className="text-2xl font-bold text-[#4B2E20]">
+                Customer Reviews
+              </h2>
+
+              <button
+                onClick={submitReview}
+                className="bg-[#4B2E20] text-white px-5 py-2 rounded-xl hover:bg-[#6B4226]"
+              >
+                Submit Review
+              </button>
+            </div>
+            <div className="mt-6 space-y-4">
+
+              <select
+                value={rating}
+                onChange={(e) => setRating(Number(e.target.value))}
+                className="border rounded-xl px-4 py-3 w-full"
+              >
+                <option value={5}>★★★★★ 5</option>
+                <option value={4}>★★★★☆ 4</option>
+                <option value={3}>★★★☆☆ 3</option>
+                <option value={2}>★★☆☆☆ 2</option>
+                <option value={1}>★☆☆☆☆ 1</option>
+              </select>
+
+              <textarea
+                rows={4}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Write your review..."
+                className="border rounded-xl w-full p-4"
+              />
+
+            </div>
+
+
+            {/* Overall Rating */}
+
+            <div className="flex items-center gap-5 mt-8">
+
+              <div className="text-center">
+
+                <h1 className="text-5xl font-bold text-[#4B2E20]">
+                  4.9
+                </h1>
+
+                <div className="flex justify-center mt-2">
+
+                  {[1, 2, 3, 4, 5].map((item) => (
+
+                    <Star
+                      key={item}
+                      fill="#FFD700"
+                      className="text-yellow-400"
+                    />
+
+                  ))}
+
+                </div>
+
+                <p className="text-gray-500 mt-2">
+                  Based on 248 Reviews
+                </p>
+
+              </div>
+
+              <div className="flex-1">
+
+                {[5, 4, 3, 2, 1].map((item) => (
+
+                  <div
+                    key={item}
+                    className="flex items-center gap-3 mb-3"
+                  >
+
+                    <span>{item}★</span>
+
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+
+                      <div
+                        className="bg-yellow-400 h-3 rounded-full"
+                        style={{
+                          width:
+                            item === 5
+                              ? "82%"
+                              : item === 4
+                                ? "12%"
+                                : item === 3
+                                  ? "4%"
+                                  : item === 2
+                                    ? "1%"
+                                    : "1%"
+                        }}
+                      ></div>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            </div>
+
+          </div>
+          {reviews.map((review) => (
+
+            <div
+              key={review._id}
+              className="bg-white rounded-3xl shadow-lg p-6 mt-8"
+            >
+
+              <div className="flex justify-between items-start">
+
+                <div>
+
+                  <h3 className="font-bold text-lg">
+                    {review.user?.name}
+                  </h3>
+
+                  <div className="flex mt-2">
+
+                    {[1, 2, 3, 4, 5].map((star) => (
+
+                      <Star
+                        key={star}
+                        size={18}
+                        fill={star <= review.rating ? "#FFD700" : "none"}
+                        className="text-yellow-400"
+                      />
+
+                    ))}
+
+                  </div>
+
+                </div>
+
+                <span className="text-gray-500">
+                  {new Date(review.createdAt).toLocaleDateString()}
+                </span>
+
+              </div>
+
+              <p className="mt-5 text-gray-600 leading-7">
+                {review.comment}
+              </p>
+
+            </div>
 
           ))}
+          <div className="mt-12">
 
-        </div>
+            <h2 className="text-3xl font-bold text-[#4B2E20] mb-8">
+              Related Products
+            </h2>
 
-      </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-    </div>
+              {[1, 2, 3, 4].map((item) => (
 
-    <span className="text-gray-500">
-      2 Days Ago
-    </span>
+                <div
+                  key={item}
+                  className="bg-white rounded-3xl shadow hover:shadow-xl transition overflow-hidden"
+                >
 
-  </div>
+                  <img
+                    src={`https://picsum.photos/400/40${item}`}
+                    className="h-64 w-full object-cover"
+                    alt=""
+                  />
 
-  <p className="mt-5 text-gray-600 leading-7">
+                  <div className="p-5">
 
-    Beautiful craftsmanship. The vase looks even better in person.
-    Packaging was excellent and delivery was quick.
+                    <h3 className="font-bold">
+                      Handcrafted Product {item}
+                    </h3>
 
-  </p>
+                    <p className="text-gray-500 mt-2">
+                      Premium Handmade Collection
+                    </p>
 
-  <div className="flex gap-3 mt-5">
+                    <div className="flex justify-between items-center mt-5">
 
-    <img
-      src="https://images.unsplash.com/photo-1517705008128-361805f42e86?w=400"
-      className="w-24 h-24 rounded-xl object-cover"
-      alt=""
-    />
+                      <span className="font-bold text-xl">
+                        ₹{1500 + item * 250}
+                      </span>
 
-    <img
-      src="https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=400"
-      className="w-24 h-24 rounded-xl object-cover"
-      alt=""
-    />
+                      <button className="bg-[#4B2E20] text-white px-4 py-2 rounded-xl">
+                        View
+                      </button>
 
-  </div>
+                    </div>
 
-  <button className="mt-6 border px-5 py-2 rounded-xl hover:bg-[#FFF8F2]">
+                  </div>
 
-    Helpful 👍 (18)
+                </div>
 
-  </button>
+              ))}
 
-</div>
-<div className="mt-12">
+            </div>
 
-<h2 className="text-3xl font-bold text-[#4B2E20] mb-8">
-Related Products
-</h2>
+          </div>
+          <div className="bg-white rounded-3xl shadow-lg p-8 mt-12">
 
-<div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <h2 className="text-2xl font-bold text-[#4B2E20] mb-8">
 
-{[1,2,3,4].map((item)=>(
+              Frequently Bought Together
 
-<div
-key={item}
-className="bg-white rounded-3xl shadow hover:shadow-xl transition overflow-hidden"
->
+            </h2>
 
-<img
-src={`https://picsum.photos/400/40${item}`}
-className="h-64 w-full object-cover"
-alt=""
-/>
+            <div className="grid md:grid-cols-3 gap-6">
 
-<div className="p-5">
+              {["Vase", "Flowers", "Table Decor"].map((item, index) => (
 
-<h3 className="font-bold">
-Handcrafted Product {item}
-</h3>
+                <div
+                  key={index}
+                  className="text-center"
+                >
 
-<p className="text-gray-500 mt-2">
-Premium Handmade Collection
-</p>
+                  <img
+                    src={`https://picsum.photos/300/30${index}`}
+                    className="rounded-2xl h-52 w-full object-cover"
+                  />
 
-<div className="flex justify-between items-center mt-5">
+                  <h3 className="font-semibold mt-4">
 
-<span className="font-bold text-xl">
-₹{1500+item*250}
-</span>
+                    {item}
 
-<button className="bg-[#4B2E20] text-white px-4 py-2 rounded-xl">
-View
-</button>
+                  </h3>
 
-</div>
+                  <p className="text-[#4B2E20] font-bold mt-2">
 
-</div>
+                    ₹{900 + index * 500}
 
-</div>
+                  </p>
 
-))}
+                </div>
 
-</div>
+              ))}
 
-</div>
-<div className="bg-white rounded-3xl shadow-lg p-8 mt-12">
+            </div>
 
-<h2 className="text-2xl font-bold text-[#4B2E20] mb-8">
+            <button className="mt-8 bg-[#4B2E20] text-white px-8 py-3 rounded-xl hover:bg-[#6B4226]">
 
-Frequently Bought Together
+              Add All To Cart
 
-</h2>
+            </button>
 
-<div className="grid md:grid-cols-3 gap-6">
+          </div>
+          <div className="mt-12 mb-20">
 
-{["Vase","Flowers","Table Decor"].map((item,index)=>(
+            <h2 className="text-3xl font-bold text-[#4B2E20] mb-8">
 
-<div
-key={index}
-className="text-center"
->
+              Recently Viewed
 
-<img
-src={`https://picsum.photos/300/30${index}`}
-className="rounded-2xl h-52 w-full object-cover"
-/>
+            </h2>
 
-<h3 className="font-semibold mt-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-{item}
+              {[1, 2, 3, 4].map((item) => (
 
-</h3>
+                <div
+                  key={item}
+                  className="bg-white rounded-3xl shadow overflow-hidden"
+                >
 
-<p className="text-[#4B2E20] font-bold mt-2">
+                  <img
+                    src={`https://picsum.photos/400/50${item}`}
+                    className="h-56 w-full object-cover"
+                  />
 
-₹{900+index*500}
+                  <div className="p-5">
 
-</p>
+                    <h3 className="font-semibold">
+                      Decor Item {item}
+                    </h3>
 
-</div>
+                    <p className="text-[#4B2E20] font-bold mt-2">
+                      ₹{1200 + item * 200}
+                    </p>
 
-))}
+                  </div>
 
-</div>
+                </div>
 
-<button className="mt-8 bg-[#4B2E20] text-white px-8 py-3 rounded-xl hover:bg-[#6B4226]">
+              ))}
 
-Add All To Cart
+            </div>
 
-</button>
-
-</div>
-<div className="mt-12 mb-20">
-
-<h2 className="text-3xl font-bold text-[#4B2E20] mb-8">
-
-Recently Viewed
-
-</h2>
-
-<div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-{[1,2,3,4].map((item)=>(
-
-<div
-key={item}
-className="bg-white rounded-3xl shadow overflow-hidden"
->
-
-<img
-src={`https://picsum.photos/400/50${item}`}
-className="h-56 w-full object-cover"
-/>
-
-<div className="p-5">
-
-<h3 className="font-semibold">
-Decor Item {item}
-</h3>
-
-<p className="text-[#4B2E20] font-bold mt-2">
-₹{1200+item*200}
-</p>
-
-</div>
-
-</div>
-
-))}
-
-</div>
-
-</div>       
+          </div>
 
         </div>
 
