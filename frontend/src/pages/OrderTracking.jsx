@@ -1,19 +1,30 @@
 import React from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
-  Package,
+  ArrowLeft,
   CheckCircle,
+  Package,
   Truck,
   Home,
-  ArrowLeft,
+  CreditCard,
+  MapPin,
 } from "lucide-react";
 
 export default function OrderTracking() {
-  const { id } = useParams();
   const navigate = useNavigate();
+  const { id } = useParams();
 
-  // Demo status (later you can fetch this from backend)
-  const currentStatus = "Shipped";
+  // Demo order data
+  const order = {
+    product: "Luxury Ceramic Vase",
+    price: "₹2,499",
+    trackingId: "AC-TRACK-785214",
+    payment: "Cash on Delivery",
+    address:
+      "H.No 2-45, Guntur, Andhra Pradesh - 522529",
+    estimatedDelivery: "05 Aug 2026",
+    status: "Shipped",
+  };
 
   const steps = [
     "Order Placed",
@@ -24,12 +35,12 @@ export default function OrderTracking() {
     "Delivered",
   ];
 
-  const currentIndex = steps.indexOf(currentStatus);
+  const currentStep = steps.indexOf(order.status);
 
   return (
-    <div className="min-h-screen bg-[#FFF8F2] py-10 px-6">
+    <div className="min-h-screen bg-[#FFF8F2] py-10">
 
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-lg p-10">
+      <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-lg p-10">
 
         <button
           onClick={() => navigate(-1)}
@@ -40,37 +51,67 @@ export default function OrderTracking() {
         </button>
 
         <h1 className="text-4xl font-bold text-[#4B2E20]">
-          Order Tracking
+          Track Your Order
         </h1>
 
-        <p className="mt-3 text-gray-600">
-          Order ID:
+        <p className="text-gray-500 mt-2">
+          Order ID: {id}
         </p>
 
-        <p className="font-semibold break-all">
-          {id}
-        </p>
+        <div className="grid md:grid-cols-2 gap-8 mt-10">
 
-        <div className="mt-8 bg-[#FFF8F2] rounded-2xl p-6">
+          <div className="bg-[#FFF8F2] rounded-2xl p-6">
 
-          <h2 className="text-2xl font-bold text-[#4B2E20] mb-6">
-            Delivery Progress
-          </h2>
+            <h2 className="text-2xl font-bold mb-6">
+              Order Information
+            </h2>
 
-          <div className="space-y-6">
+            <p><b>Product:</b> {order.product}</p>
+
+            <p className="mt-3">
+              <b>Price:</b> {order.price}
+            </p>
+
+            <p className="mt-3">
+              <b>Tracking ID:</b> {order.trackingId}
+            </p>
+
+            <p className="mt-3 flex items-center gap-2">
+              <CreditCard size={18}/>
+              {order.payment}
+            </p>
+
+            <p className="mt-3 flex items-start gap-2">
+              <MapPin size={18}/>
+              {order.address}
+            </p>
+
+            <p className="mt-3">
+              <b>Estimated Delivery:</b>{" "}
+              {order.estimatedDelivery}
+            </p>
+
+          </div>
+
+          <div>
+
+            <h2 className="text-2xl font-bold mb-6">
+              Delivery Status
+            </h2>
 
             {steps.map((step, index) => (
 
               <div
-                key={index}
-                className="flex items-center gap-5"
+                key={step}
+                className="flex items-center mb-6"
               >
 
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    index <= currentIndex
+                  className={`w-12 h-12 rounded-full flex items-center justify-center
+                  ${
+                    index <= currentStep
                       ? "bg-green-500 text-white"
-                      : "bg-gray-300 text-white"
+                      : "bg-gray-300"
                   }`}
                 >
 
@@ -83,15 +124,15 @@ export default function OrderTracking() {
 
                 </div>
 
-                <div>
+                <div className="ml-5">
 
-                  <h3 className="font-bold text-lg">
+                  <h3 className="font-semibold">
                     {step}
                   </h3>
 
                   <p className="text-gray-500">
 
-                    {index <= currentIndex
+                    {index <= currentStep
                       ? "Completed"
                       : "Pending"}
 
@@ -102,32 +143,6 @@ export default function OrderTracking() {
               </div>
 
             ))}
-
-          </div>
-
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6 mt-10">
-
-          <div className="bg-[#FFF8F2] rounded-2xl p-6">
-
-            <h3 className="font-bold text-xl mb-3">
-              Estimated Delivery
-            </h3>
-
-            <p>Within 5-7 Business Days</p>
-
-          </div>
-
-          <div className="bg-[#FFF8F2] rounded-2xl p-6">
-
-            <h3 className="font-bold text-xl mb-3">
-              Tracking Number
-            </h3>
-
-            <p>
-              AC-{id.slice(-6).toUpperCase()}
-            </p>
 
           </div>
 
