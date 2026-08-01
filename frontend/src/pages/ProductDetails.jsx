@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../services/productService";
 import { addToCart } from "../services/cartService";
 import { addToWishlist } from "../services/wishlistService";
-import { getReviews, addReview } from "../services/reviewService";
+import { getReviews, addReview } from "../services/reviewservice";
 import {
   Heart,
   Share2,
