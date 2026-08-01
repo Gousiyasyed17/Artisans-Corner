@@ -1,3 +1,4 @@
+const Product = require("../models/Product");
 const Order = require("../models/Order");
 
 const Razorpay = require("razorpay");
@@ -53,7 +54,7 @@ exports.placeOrder = async (req, res) => {
     // ==========================
     // Platform Fee (10%)
     // ==========================
-const platformFee = Number((totalPrice * 0.05).toFixed(2));
+    const platformFee = Number((totalPrice * 0.05).toFixed(2));
 
     // ==========================
     // Seller Payout
@@ -82,6 +83,27 @@ const platformFee = Number((totalPrice * 0.05).toFixed(2));
     estimatedDelivery.setDate(
       estimatedDelivery.getDate() + 5
     );
+    const updatedItems = [];
+
+for (const item of items) {
+
+  const product = await Product.findById(item.product);
+
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      message: "Product not found",
+    });
+  }
+
+  updatedItems.push({
+    product: item.product,
+    seller: product.seller,
+    quantity: item.quantity,
+    price: item.price,
+  });
+
+}
 
     // ==========================
     // Create Order
@@ -90,7 +112,7 @@ const platformFee = Number((totalPrice * 0.05).toFixed(2));
     const order = await Order.create({
       customer: req.user._id,
 
-      items,
+      items: updatedItems,
 
       shippingAddress,
 
