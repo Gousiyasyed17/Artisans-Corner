@@ -463,11 +463,15 @@ exports.getAllOrders = async (req, res) => {
 exports.getSellerOrders = async (req, res) => {
   try {
 
+    console.log("Logged in Seller ID:", req.user._id.toString());
+
     const orders = await Order.find({
       "items.seller": req.user._id,
     })
       .populate("customer", "name email")
       .populate("items.product", "name images");
+
+    console.log("Orders Found:", orders.length);
 
     res.status(200).json({
       success: true,
@@ -475,6 +479,8 @@ exports.getSellerOrders = async (req, res) => {
     });
 
   } catch (error) {
+
+    console.log(error);
 
     res.status(500).json({
       success: false,
