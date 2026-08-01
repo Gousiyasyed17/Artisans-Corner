@@ -1,4 +1,3 @@
-const Product = require("../models/Product");
 const Order = require("../models/Order");
 
 const Razorpay = require("razorpay");
@@ -54,7 +53,7 @@ exports.placeOrder = async (req, res) => {
     // ==========================
     // Platform Fee (10%)
     // ==========================
-    const platformFee = Number((totalPrice * 0.05).toFixed(2));
+const platformFee = Number((totalPrice * 0.05).toFixed(2));
 
     // ==========================
     // Seller Payout
@@ -83,27 +82,6 @@ exports.placeOrder = async (req, res) => {
     estimatedDelivery.setDate(
       estimatedDelivery.getDate() + 5
     );
-    const updatedItems = [];
-
-for (const item of items) {
-
-  const product = await Product.findById(item.product);
-
-  if (!product) {
-    return res.status(404).json({
-      success: false,
-      message: "Product not found",
-    });
-  }
-
-  updatedItems.push({
-    product: item.product,
-    seller: product.seller,
-    quantity: item.quantity,
-    price: item.price,
-  });
-
-}
 
     // ==========================
     // Create Order
@@ -112,7 +90,7 @@ for (const item of items) {
     const order = await Order.create({
       customer: req.user._id,
 
-      items: updatedItems,
+      items,
 
       shippingAddress,
 
@@ -463,15 +441,11 @@ exports.getAllOrders = async (req, res) => {
 exports.getSellerOrders = async (req, res) => {
   try {
 
-    console.log("Logged in Seller ID:", req.user._id.toString());
-
     const orders = await Order.find({
       "items.seller": req.user._id,
     })
       .populate("customer", "name email")
       .populate("items.product", "name images");
-
-    console.log("Orders Found:", orders.length);
 
     res.status(200).json({
       success: true,
@@ -479,8 +453,6 @@ exports.getSellerOrders = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.log(error);
 
     res.status(500).json({
       success: false,

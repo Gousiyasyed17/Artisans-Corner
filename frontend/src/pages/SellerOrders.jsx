@@ -20,19 +20,15 @@ export default function SellerOrders() {
   }, []);
 
   const loadOrders = async () => {
-  try {
-    const response = await getSellerOrders();
-
-    console.log(response);
-
-    setOrders(response.orders || response.data?.orders || []);
-
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const data = await getSellerOrders();
+      setOrders(data || []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
   const changeStatus = async (id, status) => {
   try {
     await updateOrderStatus(id, status);
