@@ -37,6 +37,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/invoice", invoiceRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/seller", sellerRoutes);
 app.use("/api/customer", customerRoutes);
