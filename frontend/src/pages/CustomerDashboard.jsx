@@ -13,6 +13,13 @@ import {
 
 export default function CustomerDashboard() {
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   const stats = [
     {
       title: "Total Orders",
@@ -78,6 +85,24 @@ export default function CustomerDashboard() {
             Discover beautiful handcrafted creations and
             track all your orders in one place.
           </p>
+
+          <div className="flex gap-4 mt-6">
+
+            <button
+              onClick={() => navigate("/seller/dashboard")}
+              className="bg-white text-[#4B2E20] px-5 py-3 rounded-xl font-semibold"
+            >
+              Seller Dashboard
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-5 py-3 rounded-xl font-semibold"
+            >
+              Logout
+            </button>
+
+          </div>
 
         </div>
 
@@ -272,7 +297,10 @@ export default function CustomerDashboard() {
 
               <div className="space-y-3">
 
-                <button className="w-full flex items-center gap-3 bg-[#FFF8F2] hover:bg-[#F4ECE3] rounded-xl p-4 transition">
+                <button
+                  onClick={() => navigate("/products")}
+                  className="w-full flex items-center gap-3 bg-[#FFF8F2] hover:bg-[#F4ECE3] rounded-xl p-4 transition"
+                >
                   <ShoppingBag />
                   Shop Now
                 </button>
@@ -285,12 +313,18 @@ export default function CustomerDashboard() {
                   Track Orders
                 </button>
 
-                <button className="w-full flex items-center gap-3 bg-[#FFF8F2] hover:bg-[#F4ECE3] rounded-xl p-4 transition">
+                <button
+                  onClick={() => alert("Payment Methods feature coming soon")}
+                  className="w-full flex items-center gap-3 bg-[#FFF8F2] hover:bg-[#F4ECE3] rounded-xl p-4 transition"
+                >
                   <CreditCard />
                   Payment Methods
                 </button>
 
-                <button className="w-full flex items-center gap-3 bg-[#FFF8F2] hover:bg-[#F4ECE3] rounded-xl p-4 transition">
+                <button
+                  onClick={() => navigate("/customer/addresses")}
+                  className="w-full flex items-center gap-3 bg-[#FFF8F2] hover:bg-[#F4ECE3] rounded-xl p-4 transition"
+                >
                   <MapPin />
                   Manage Addresses
                 </button>

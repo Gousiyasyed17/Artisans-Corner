@@ -404,6 +404,14 @@ export default function CustomerOrders() {
                           <Eye size={18} />
                           View Details
                         </Link>
+                        <Link
+                          to={`/customer/track/${order._id}`}
+                          className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 hover:bg-blue-700"
+                        >
+                          <Truck size={18} />
+                          Track Order
+                        </Link>
+                        
                         <button
                           onClick={() => downloadInvoice(order._id)}
                           className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700"

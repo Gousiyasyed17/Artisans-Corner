@@ -19,6 +19,7 @@ import CustomerOrders from "./pages/CustomerOrders";
 import OrderDetails from "./pages/OrderDetails";
 import CustomerProfile from "./pages/CustomerProfile";
 import CustomerReviews from "./pages/CustomerReviews";
+import OrderTracking from "./pages/OrderTracking";
 
 import SellerDashboard from "./pages/SellerDashboard";
 import SellerProducts from "./pages/SellerProducts";
@@ -91,6 +92,8 @@ function App() {
         <Route path="/customer/orders"element={<CustomerOrders />}/>
 
         <Route path="/customer/orders/:id"element={<OrderDetails />}/>
+
+        <Route path="/customer/tracking/:id" element={<OrderTracking />} />
 
 
         {/* Customer */}
